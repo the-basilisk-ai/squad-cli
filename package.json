@@ -1,0 +1,31 @@
+{
+  "name": "@squadai/cli",
+  "version": "0.1.0",
+  "description": "Squad AI CLI - Product strategy management for AI agents and humans",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "squad": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "format": "biome check .",
+    "format:fix": "biome check --write .",
+    "openapi:squad": "npx tsx ./scripts/openapi-unify-tags.ts && openapi-generator-cli generate -g typescript-fetch -c ./openapi-generator-config.json -i ./openapi/squad.json -o src/lib/openapi/squad"
+  },
+  "dependencies": {
+    "commander": "^13.1.0",
+    "open": "^10.1.0",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.6",
+    "@openapitools/openapi-generator-cli": "^2.30.2",
+    "@types/node": "^22.15.0",
+"tsup": "^8.4.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+}
