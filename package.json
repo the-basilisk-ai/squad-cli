@@ -3,6 +3,18 @@
   "version": "0.1.0",
   "description": "Squad AI CLI - Product strategy management for AI agents and humans",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/the-basilisk-ai/squad-cli.git"
+  },
+  "homepage": "https://github.com/the-basilisk-ai/squad-cli#readme",
+  "bugs": {
+    "url": "https://github.com/the-basilisk-ai/squad-cli/issues"
+  },
+  "files": [
+    "dist",
+    "LICENSE"
+  ],
   "type": "module",
   "bin": {
     "squad": "./dist/cli.js"
