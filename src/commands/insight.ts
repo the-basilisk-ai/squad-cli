@@ -62,7 +62,10 @@ export function registerInsightCommands(program: Command) {
     .description("Create an insight")
     .requiredOption("--title <title>", "Insight title")
     .requiredOption("--description <description>", "Description of the insight")
-    .requiredOption("--type <type>", "Insight type (Feedback, Bug, FeatureRequest)")
+    .requiredOption(
+      "--type <type>",
+      "Insight type (Feedback, Bug, FeatureRequest)",
+    )
     .action(async function (this: Command) {
       try {
         const opts = getGlobalOptions(this);

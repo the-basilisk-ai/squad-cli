@@ -61,7 +61,10 @@ export function registerKnowledgeCommands(program: Command) {
     .command("create")
     .description("Create a knowledge item")
     .requiredOption("--title <title>", "Knowledge item title")
-    .requiredOption("--description <description>", "Short summary of the knowledge")
+    .requiredOption(
+      "--description <description>",
+      "Short summary of the knowledge",
+    )
     .requiredOption("--content <content>", "Knowledge content")
     .action(async function (this: Command) {
       try {
