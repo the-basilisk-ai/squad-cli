@@ -38,4 +38,3 @@ export function getSquadAppUrl(env?: Environment): string {
   }
   return "https://app.meetsquad.ai";
 }
-

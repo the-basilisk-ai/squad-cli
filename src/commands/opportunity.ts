@@ -3,7 +3,7 @@ import { getGlobalOptions } from "../cli.js";
 import { squadClient } from "../lib/clients/squad.js";
 import { resolveContext } from "../lib/context.js";
 import { handleError } from "../lib/errors.js";
-import { output, outputJson } from "../lib/output.js";
+import { defined, output, outputJson } from "../lib/output.js";
 
 export function registerOpportunityCommands(program: Command) {
   const opportunity = program
@@ -32,7 +32,7 @@ export function registerOpportunityCommands(program: Command) {
 
         output(items, opts.format, ["id", "title", "status"]);
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -60,7 +60,7 @@ export function registerOpportunityCommands(program: Command) {
 
         outputJson(result);
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -95,7 +95,7 @@ export function registerOpportunityCommands(program: Command) {
           message: "Opportunity created",
         });
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -120,11 +120,11 @@ export function registerOpportunityCommands(program: Command) {
           orgId: ctx.orgId,
           workspaceId: ctx.workspaceId,
           opportunityId: id,
-          updateOpportunityPayload: {
+          updateOpportunityPayload: defined({
             title: localOpts.title,
             description: localOpts.description,
             status: localOpts.status,
-          },
+          }),
         });
 
         outputJson({
@@ -134,7 +134,7 @@ export function registerOpportunityCommands(program: Command) {
           message: "Opportunity updated",
         });
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -156,7 +156,7 @@ export function registerOpportunityCommands(program: Command) {
 
         outputJson({ id, message: "Opportunity deleted" });
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -164,7 +164,6 @@ export function registerOpportunityCommands(program: Command) {
     .command("generate-solutions")
     .description("Generate AI solutions for an opportunity")
     .argument("<id>", "Opportunity ID")
-    .option("--prompt <prompt>", "Optional prompt to guide solution generation")
     .action(async function (this: Command, id: string) {
       try {
         const opts = getGlobalOptions(this);
@@ -179,7 +178,7 @@ export function registerOpportunityCommands(program: Command) {
 
         outputJson({ id, message: "Solution generation started" });
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -218,7 +217,7 @@ export function registerOpportunityCommands(program: Command) {
           message: `Relationships ${localOpts.action === "add" ? "added" : "removed"}`,
         });
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 }

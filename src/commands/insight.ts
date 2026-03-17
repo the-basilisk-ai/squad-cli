@@ -30,7 +30,7 @@ export function registerInsightCommands(program: Command) {
 
         output(items, opts.format, ["id", "title", "type"]);
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -52,7 +52,7 @@ export function registerInsightCommands(program: Command) {
 
         outputJson(result);
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -85,7 +85,7 @@ export function registerInsightCommands(program: Command) {
           message: "Insight created",
         });
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -107,7 +107,7 @@ export function registerInsightCommands(program: Command) {
 
         outputJson({ id, message: "Insight deleted" });
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 }

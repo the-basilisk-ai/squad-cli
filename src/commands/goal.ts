@@ -3,7 +3,7 @@ import { getGlobalOptions } from "../cli.js";
 import { squadClient } from "../lib/clients/squad.js";
 import { resolveContext } from "../lib/context.js";
 import { handleError } from "../lib/errors.js";
-import { output, outputJson } from "../lib/output.js";
+import { defined, output, outputJson } from "../lib/output.js";
 
 export function registerGoalCommands(program: Command) {
   const goal = program
@@ -32,7 +32,7 @@ export function registerGoalCommands(program: Command) {
 
         output(items, opts.format, ["id", "title", "priority"]);
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -60,7 +60,7 @@ export function registerGoalCommands(program: Command) {
 
         outputJson(result);
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -91,7 +91,7 @@ export function registerGoalCommands(program: Command) {
           message: "Goal created",
         });
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -112,10 +112,10 @@ export function registerGoalCommands(program: Command) {
           orgId: ctx.orgId,
           workspaceId: ctx.workspaceId,
           goalId: id,
-          updateGoalPayload: {
+          updateGoalPayload: defined({
             title: localOpts.title,
             description: localOpts.description,
-          },
+          }),
         });
 
         outputJson({
@@ -124,7 +124,7 @@ export function registerGoalCommands(program: Command) {
           message: "Goal updated",
         });
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -146,7 +146,7 @@ export function registerGoalCommands(program: Command) {
 
         outputJson({ id, message: "Goal deleted" });
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -183,7 +183,7 @@ export function registerGoalCommands(program: Command) {
           message: `Relationships ${localOpts.action === "add" ? "added" : "removed"}`,
         });
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 }

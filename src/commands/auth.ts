@@ -22,7 +22,7 @@ export function registerAuthCommands(program: Command) {
         await login(env);
         outputJson({ message: "Login successful", env });
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -36,7 +36,7 @@ export function registerAuthCommands(program: Command) {
         clearWorkspaceSelection(env);
         outputJson({ message: "Logged out", env });
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -60,7 +60,7 @@ export function registerAuthCommands(program: Command) {
           expiresAt: new Date(tokens.expiresAt * 1000).toISOString(),
         });
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 }

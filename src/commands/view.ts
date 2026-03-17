@@ -26,7 +26,7 @@ export function registerViewCommands(program: Command) {
 
         outputJson(result);
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -46,7 +46,7 @@ export function registerViewCommands(program: Command) {
 
         outputJson(result);
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 }

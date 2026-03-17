@@ -7,7 +7,7 @@ import {
   setWorkspaceSelection,
 } from "../lib/context.js";
 import { handleError } from "../lib/errors.js";
-import { output, outputJson } from "../lib/output.js";
+import { defined, output, outputJson } from "../lib/output.js";
 
 export function registerWorkspaceCommands(program: Command) {
   const workspace = program
@@ -25,7 +25,7 @@ export function registerWorkspaceCommands(program: Command) {
 
         const orgs = await client.listOrganisations();
         const results = await Promise.all(
-          orgs.data.map(async (org) => {
+          orgs.data.map(async org => {
             const ws = await client.listWorkspaces({ orgId: org.id });
             return (ws.data ?? []).map((w: { id: string; name?: string }) => ({
               orgId: org.id,
@@ -43,7 +43,7 @@ export function registerWorkspaceCommands(program: Command) {
           "workspaceName",
         ]);
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -55,10 +55,21 @@ export function registerWorkspaceCommands(program: Command) {
     .action(async function (this: Command, orgId: string, workspaceId: string) {
       try {
         const opts = getGlobalOptions(this);
+        const token = await resolveToken(opts.env, opts.token);
+        const client = squadClient(token, opts.env);
+
+        // Validate the org/workspace exists before persisting
+        const workspace = await client.getWorkspace({ orgId, workspaceId });
+
         setWorkspaceSelection(opts.env, { orgId, workspaceId });
-        outputJson({ message: "Workspace selected", orgId, workspaceId });
+        outputJson({
+          message: "Workspace selected",
+          orgId,
+          workspaceId,
+          workspaceName: workspace.name,
+        });
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -78,7 +89,7 @@ export function registerWorkspaceCommands(program: Command) {
 
         outputJson(result);
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -100,18 +111,18 @@ export function registerWorkspaceCommands(program: Command) {
         const result = await client.updateWorkspace({
           orgId: ctx.orgId,
           workspaceId: ctx.workspaceId,
-          updateWorkspacePayload: {
+          updateWorkspacePayload: defined({
             name: localOpts.name,
             description: localOpts.description,
             missionStatement: localOpts.missionStatement,
             homepageUrl: localOpts.homepageUrl,
             logoUrl: localOpts.logoUrl,
-          },
+          }),
         });
 
         outputJson(result);
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 }

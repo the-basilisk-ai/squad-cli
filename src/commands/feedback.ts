@@ -29,7 +29,7 @@ export function registerFeedbackCommands(program: Command) {
 
         output(items, opts.format, ["id", "title"]);
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -51,7 +51,7 @@ export function registerFeedbackCommands(program: Command) {
 
         outputJson(result);
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -82,7 +82,7 @@ export function registerFeedbackCommands(program: Command) {
           message: "Feedback created",
         });
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -104,7 +104,7 @@ export function registerFeedbackCommands(program: Command) {
 
         outputJson({ id, message: "Feedback deleted" });
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 }

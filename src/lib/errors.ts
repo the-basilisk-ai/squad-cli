@@ -65,19 +65,19 @@ export async function formatApiError(error: unknown): Promise<string> {
   return `API request failed (HTTP ${status})`;
 }
 
-export function handleError(error: unknown): never {
+export async function handleError(error: unknown): Promise<never> {
   if (error instanceof SquadError) {
     outputError(error.code, error.message);
     process.exit(error.exitCode);
   }
 
-  if (error instanceof Error) {
-    outputError("UNEXPECTED_ERROR", error.message);
-    process.exit(EXIT_ERROR);
-  }
+  const message = await formatApiError(error);
+  const isAuth =
+    error instanceof ResponseError &&
+    (error.response.status === 401 || error.response.status === 403);
 
-  outputError("UNKNOWN_ERROR", String(error));
-  process.exit(EXIT_ERROR);
+  outputError(isAuth ? "AUTH_ERROR" : "API_ERROR", message);
+  process.exit(isAuth ? EXIT_AUTH_ERROR : EXIT_ERROR);
 }
 
 function outputError(code: string, message: string): void {

@@ -24,7 +24,7 @@ export function registerSearchCommands(program: Command) {
 
         outputJson(result);
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 }

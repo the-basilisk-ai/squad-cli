@@ -31,7 +31,7 @@ export function registerKnowledgeCommands(program: Command) {
 
         output(items, opts.format, ["id", "title"]);
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -53,7 +53,7 @@ export function registerKnowledgeCommands(program: Command) {
 
         outputJson(result);
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -84,7 +84,7 @@ export function registerKnowledgeCommands(program: Command) {
           message: "Knowledge created",
         });
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -106,7 +106,7 @@ export function registerKnowledgeCommands(program: Command) {
 
         outputJson({ id, message: "Knowledge deleted" });
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 }

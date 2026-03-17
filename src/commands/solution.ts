@@ -3,7 +3,7 @@ import { getGlobalOptions } from "../cli.js";
 import { squadClient } from "../lib/clients/squad.js";
 import { resolveContext } from "../lib/context.js";
 import { handleError } from "../lib/errors.js";
-import { output, outputJson } from "../lib/output.js";
+import { defined, output, outputJson } from "../lib/output.js";
 
 export function registerSolutionCommands(program: Command) {
   const solution = program.command("solution").description("Manage solutions");
@@ -30,7 +30,7 @@ export function registerSolutionCommands(program: Command) {
 
         output(items, opts.format, ["id", "title", "status"]);
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -58,7 +58,7 @@ export function registerSolutionCommands(program: Command) {
 
         outputJson(result);
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -89,7 +89,7 @@ export function registerSolutionCommands(program: Command) {
           message: "Solution created",
         });
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -111,11 +111,11 @@ export function registerSolutionCommands(program: Command) {
           orgId: ctx.orgId,
           workspaceId: ctx.workspaceId,
           solutionId: id,
-          updateSolutionPayload: {
+          updateSolutionPayload: defined({
             title: localOpts.title,
             description: localOpts.description,
             status: localOpts.status,
-          },
+          }),
         });
 
         outputJson({
@@ -125,7 +125,7 @@ export function registerSolutionCommands(program: Command) {
           message: "Solution updated",
         });
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -147,7 +147,7 @@ export function registerSolutionCommands(program: Command) {
 
         outputJson({ id, message: "Solution deleted" });
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -172,7 +172,7 @@ export function registerSolutionCommands(program: Command) {
 
         outputJson(result);
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -211,7 +211,7 @@ export function registerSolutionCommands(program: Command) {
           message: `Relationships ${localOpts.action === "add" ? "added" : "removed"}`,
         });
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 
@@ -231,7 +231,7 @@ export function registerSolutionCommands(program: Command) {
 
         outputJson(result);
       } catch (error) {
-        handleError(error);
+        await handleError(error);
       }
     });
 }

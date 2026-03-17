@@ -1,4 +1,4 @@
-import { Command } from "commander";
+import { Command, Option } from "commander";
 import { registerAuthCommands } from "./commands/auth.js";
 import { registerFeedbackCommands } from "./commands/feedback.js";
 import { registerGoalCommands } from "./commands/goal.js";
@@ -19,7 +19,11 @@ program
   .description("Squad AI CLI - Product strategy management")
   .version("0.1.0")
   .option("--format <format>", "Output format (json, table)", "json")
-  .option("--env <env>", "Environment (dev, staging, production)", "production")
+  .addOption(
+    new Option("--env <env>", "Environment")
+      .choices(["dev", "staging", "production"])
+      .default("production"),
+  )
   .option("--token <token>", "API access token (overrides stored auth)")
   .option("--verbose", "Enable verbose output");
 

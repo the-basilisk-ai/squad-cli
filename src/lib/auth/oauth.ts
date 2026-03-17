@@ -5,8 +5,8 @@ import type { Environment } from "../config.js";
 import { getPropelAuthUrl, getSquadApiUrl } from "../config.js";
 import { AuthError } from "../errors.js";
 import {
-  type StoredTokens,
   getStoredClient,
+  type StoredTokens,
   saveClient,
   saveTokens,
 } from "./token-store.js";
@@ -188,9 +188,14 @@ export async function login(env: Environment): Promise<StoredTokens> {
         if (error) {
           const description =
             url.searchParams.get("error_description") || error;
+          const safe = description
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
           res.writeHead(200, { "Content-Type": "text/html" });
           res.end(
-            `<html><body><h1>Login failed</h1><p>${description}</p></body></html>`,
+            `<html><body><h1>Login failed</h1><p>${safe}</p></body></html>`,
           );
           clearTimeout(timeout);
           server.close();
@@ -261,13 +266,20 @@ export async function login(env: Environment): Promise<StoredTokens> {
       try {
         const open = (await import("open")).default;
         await open(authorizeUrl.toString());
-        console.error("Opening browser for login...");
         console.error(
-          `If the browser doesn't open, visit: ${authorizeUrl.toString()}`,
+          JSON.stringify({
+            status: "waiting",
+            message: "Opening browser for login",
+            url: authorizeUrl.toString(),
+          }),
         );
       } catch {
         console.error(
-          `Open this URL in your browser to log in:\n${authorizeUrl.toString()}`,
+          JSON.stringify({
+            status: "waiting",
+            message: "Open this URL in your browser to log in",
+            url: authorizeUrl.toString(),
+          }),
         );
       }
     });
