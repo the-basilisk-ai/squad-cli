@@ -7,7 +7,7 @@ import {
   setWorkspaceSelection,
 } from "../lib/context.js";
 import { handleError } from "../lib/errors.js";
-import { defined, output, outputJson } from "../lib/output.js";
+import { omitUndefined, output, outputJson } from "../lib/output.js";
 
 export function registerWorkspaceCommands(program: Command) {
   const workspace = program
@@ -111,7 +111,7 @@ export function registerWorkspaceCommands(program: Command) {
         const result = await client.updateWorkspace({
           orgId: ctx.orgId,
           workspaceId: ctx.workspaceId,
-          updateWorkspacePayload: defined({
+          updateWorkspacePayload: omitUndefined({
             name: localOpts.name,
             description: localOpts.description,
             missionStatement: localOpts.missionStatement,

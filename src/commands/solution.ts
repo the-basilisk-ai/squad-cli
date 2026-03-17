@@ -3,7 +3,7 @@ import { getGlobalOptions } from "../cli.js";
 import { squadClient } from "../lib/clients/squad.js";
 import { resolveContext } from "../lib/context.js";
 import { handleError } from "../lib/errors.js";
-import { defined, output, outputJson } from "../lib/output.js";
+import { omitUndefined, output, outputJson } from "../lib/output.js";
 
 export function registerSolutionCommands(program: Command) {
   const solution = program.command("solution").description("Manage solutions");
@@ -111,7 +111,7 @@ export function registerSolutionCommands(program: Command) {
           orgId: ctx.orgId,
           workspaceId: ctx.workspaceId,
           solutionId: id,
-          updateSolutionPayload: defined({
+          updateSolutionPayload: omitUndefined({
             title: localOpts.title,
             description: localOpts.description,
             status: localOpts.status,

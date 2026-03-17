@@ -3,7 +3,7 @@ import { getGlobalOptions } from "../cli.js";
 import { squadClient } from "../lib/clients/squad.js";
 import { resolveContext } from "../lib/context.js";
 import { handleError } from "../lib/errors.js";
-import { defined, output, outputJson } from "../lib/output.js";
+import { omitUndefined, output, outputJson } from "../lib/output.js";
 
 export function registerGoalCommands(program: Command) {
   const goal = program
@@ -112,7 +112,7 @@ export function registerGoalCommands(program: Command) {
           orgId: ctx.orgId,
           workspaceId: ctx.workspaceId,
           goalId: id,
-          updateGoalPayload: defined({
+          updateGoalPayload: omitUndefined({
             title: localOpts.title,
             description: localOpts.description,
           }),

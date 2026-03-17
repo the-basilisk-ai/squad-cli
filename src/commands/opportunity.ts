@@ -3,7 +3,7 @@ import { getGlobalOptions } from "../cli.js";
 import { squadClient } from "../lib/clients/squad.js";
 import { resolveContext } from "../lib/context.js";
 import { handleError } from "../lib/errors.js";
-import { defined, output, outputJson } from "../lib/output.js";
+import { omitUndefined, output, outputJson } from "../lib/output.js";
 
 export function registerOpportunityCommands(program: Command) {
   const opportunity = program
@@ -120,7 +120,7 @@ export function registerOpportunityCommands(program: Command) {
           orgId: ctx.orgId,
           workspaceId: ctx.workspaceId,
           opportunityId: id,
-          updateOpportunityPayload: defined({
+          updateOpportunityPayload: omitUndefined({
             title: localOpts.title,
             description: localOpts.description,
             status: localOpts.status,

@@ -1,5 +1,7 @@
 /** Strip undefined values so PATCH payloads only include fields the user set. */
-export function defined<T extends Record<string, unknown>>(obj: T): Partial<T> {
+export function omitUndefined<T extends Record<string, unknown>>(
+  obj: T,
+): Partial<T> {
   return Object.fromEntries(
     Object.entries(obj).filter(([, v]) => v !== undefined),
   ) as Partial<T>;
