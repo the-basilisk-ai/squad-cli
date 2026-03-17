@@ -19,7 +19,7 @@ export function registerViewCommands(program: Command) {
         const ctx = await resolveContext(opts.env, opts.token);
         const client = squadClient(ctx.token, opts.env);
 
-        const result = await client.viewStrategyContext({
+        const result = await client.getStrategyDocument({
           orgId: ctx.orgId,
           workspaceId: ctx.workspaceId,
         });
@@ -39,9 +39,10 @@ export function registerViewCommands(program: Command) {
         const ctx = await resolveContext(opts.env, opts.token);
         const client = squadClient(ctx.token, opts.env);
 
-        const result = await client.viewRoadmap({
+        const result = await client.getStrategyDocument({
           orgId: ctx.orgId,
           workspaceId: ctx.workspaceId,
+          include: "solutions",
         });
 
         outputJson(result);

@@ -51,13 +51,14 @@ export function registerOpportunityCommands(program: Command) {
         const ctx = await resolveContext(opts.env, opts.token);
         const client = squadClient(ctx.token, opts.env);
 
-        const result = await client.getOpportunity({
+        const response = await client.getOpportunityRaw({
           orgId: ctx.orgId,
           workspaceId: ctx.workspaceId,
           opportunityId: id,
           relationships: localOpts.relationships,
         });
 
+        const result = await response.raw.json();
         outputJson(result);
       } catch (error) {
         await handleError(error);
@@ -90,8 +91,8 @@ export function registerOpportunityCommands(program: Command) {
         });
 
         outputJson({
-          id: result.id,
-          title: result.title,
+          id: result.data.id,
+          title: result.data.title,
           message: "Opportunity created",
         });
       } catch (error) {
@@ -107,7 +108,7 @@ export function registerOpportunityCommands(program: Command) {
     .option("--description <description>", "Updated description")
     .option(
       "--status <status>",
-      "Updated status (new, solved, planned, in_progress)",
+      "Updated status (New, Solved, Planned, InProgress)",
     )
     .action(async function (this: Command, id: string) {
       try {
@@ -128,9 +129,9 @@ export function registerOpportunityCommands(program: Command) {
         });
 
         outputJson({
-          id: result.id,
-          title: result.title,
-          status: result.status,
+          id: result.data.id,
+          title: result.data.title,
+          status: result.data.status,
           message: "Opportunity updated",
         });
       } catch (error) {
