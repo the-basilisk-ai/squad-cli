@@ -225,7 +225,10 @@ export function registerSolutionCommands(program: Command) {
   solution
     .command("prioritise")
     .description("Reorder solutions in the workspace")
-    .requiredOption("--solution-ids <ids>", "Comma-separated solution IDs to move")
+    .requiredOption(
+      "--solution-ids <ids>",
+      "Comma-separated solution IDs to move",
+    )
     .option("--before-id <id>", "Place before this solution ID (default: end)")
     .action(async function (this: Command) {
       try {
@@ -238,7 +241,9 @@ export function registerSolutionCommands(program: Command) {
           orgId: ctx.orgId,
           workspaceId: ctx.workspaceId,
           prioritiseSolutionsRequest: {
-            solutionIds: localOpts.solutionIds.split(",").map((s: string) => s.trim()),
+            solutionIds: localOpts.solutionIds
+              .split(",")
+              .map((s: string) => s.trim()),
             beforeId: localOpts.beforeId ?? null,
           },
         });

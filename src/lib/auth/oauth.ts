@@ -267,19 +267,27 @@ export async function login(env: Environment): Promise<StoredTokens> {
         const open = (await import("open")).default;
         await open(authorizeUrl.toString());
         console.error(
-          JSON.stringify({
-            status: "waiting",
-            message: "Opening browser for login",
-            url: authorizeUrl.toString(),
-          }, null, 2),
+          JSON.stringify(
+            {
+              status: "waiting",
+              message: "Opening browser for login",
+              url: authorizeUrl.toString(),
+            },
+            null,
+            2,
+          ),
         );
       } catch {
         console.error(
-          JSON.stringify({
-            status: "waiting",
-            message: "Open this URL in your browser to log in",
-            url: authorizeUrl.toString(),
-          }, null, 2),
+          JSON.stringify(
+            {
+              status: "waiting",
+              message: "Open this URL in your browser to log in",
+              url: authorizeUrl.toString(),
+            },
+            null,
+            2,
+          ),
         );
       }
     });

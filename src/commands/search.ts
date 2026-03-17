@@ -5,7 +5,12 @@ import { resolveContext } from "../lib/context.js";
 import { handleError } from "../lib/errors.js";
 import { outputJson } from "../lib/output.js";
 
-const ALL_FILTERS = ["knowledge-base", "insights", "opportunities", "solutions"];
+const ALL_FILTERS = [
+  "knowledge-base",
+  "insights",
+  "opportunities",
+  "solutions",
+];
 
 export function registerSearchCommands(program: Command) {
   program
