@@ -3,12 +3,19 @@
 # Smoke test: exercises every CLI command against dev, then cleans up.
 # Requires: already logged in via `squad auth login --env=dev`
 #
+# Usage: ./scripts/smoke-test.sh <org-id> <workspace-id>
+#
 set -euo pipefail
+
+if [[ $# -lt 2 ]]; then
+  echo "Usage: $0 <org-id> <workspace-id>" >&2
+  exit 1
+fi
 
 CLI="node $(dirname "$0")/../dist/cli.js"
 ENV="--env=dev"
-ORG="79a7e62a-8b4d-4324-8a7e-b36a6189e704"
-WS="3e563226-fa01-441a-9a55-7c3a616a0617"
+ORG="$1"
+WS="$2"
 
 pass=0
 fail=0
