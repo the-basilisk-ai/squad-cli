@@ -51,13 +51,14 @@ export function registerGoalCommands(program: Command) {
         const ctx = await resolveContext(opts.env, opts.token);
         const client = squadClient(ctx.token, opts.env);
 
-        const result = await client.getGoal({
+        const response = await client.getGoalRaw({
           orgId: ctx.orgId,
           workspaceId: ctx.workspaceId,
-          goalId: id,
+          outcomeId: id,
           relationships: localOpts.relationships,
         });
 
+        const result = await response.raw.json();
         outputJson(result);
       } catch (error) {
         await handleError(error);
@@ -69,6 +70,7 @@ export function registerGoalCommands(program: Command) {
     .description("Create a new goal")
     .requiredOption("--title <title>", "Goal title")
     .option("--description <description>", "Goal description")
+    .option("--priority <priority>", "Priority level (number)", "0")
     .action(async function (this: Command) {
       try {
         const opts = getGlobalOptions(this);
@@ -79,15 +81,16 @@ export function registerGoalCommands(program: Command) {
         const result = await client.createGoal({
           orgId: ctx.orgId,
           workspaceId: ctx.workspaceId,
-          createGoalPayload: {
+          createOutcomePayload: {
             title: localOpts.title,
-            description: localOpts.description,
+            description: localOpts.description ?? "",
+            priority: Number(localOpts.priority),
           },
         });
 
         outputJson({
-          id: result.id,
-          title: result.title,
+          id: result.data.id,
+          title: result.data.title,
           message: "Goal created",
         });
       } catch (error) {
@@ -111,16 +114,16 @@ export function registerGoalCommands(program: Command) {
         const result = await client.updateGoal({
           orgId: ctx.orgId,
           workspaceId: ctx.workspaceId,
-          goalId: id,
-          updateGoalPayload: omitUndefined({
+          outcomeId: id,
+          updateOutcomePayload: omitUndefined({
             title: localOpts.title,
             description: localOpts.description,
           }),
         });
 
         outputJson({
-          id: result.id,
-          title: result.title,
+          id: result.data.id,
+          title: result.data.title,
           message: "Goal updated",
         });
       } catch (error) {
@@ -141,7 +144,7 @@ export function registerGoalCommands(program: Command) {
         await client.deleteGoal({
           orgId: ctx.orgId,
           workspaceId: ctx.workspaceId,
-          goalId: id,
+          outcomeId: id,
         });
 
         outputJson({ id, message: "Goal deleted" });
@@ -156,7 +159,6 @@ export function registerGoalCommands(program: Command) {
     .argument("<id>", "Goal ID")
     .requiredOption("--action <action>", "add or remove")
     .option("--opportunity-ids <ids>", "Comma-separated opportunity IDs")
-    .option("--solution-ids <ids>", "Comma-separated solution IDs")
     .action(async function (this: Command, id: string) {
       try {
         const opts = getGlobalOptions(this);
@@ -170,11 +172,10 @@ export function registerGoalCommands(program: Command) {
         await client.manageGoalRelationships({
           orgId: ctx.orgId,
           workspaceId: ctx.workspaceId,
-          goalId: id,
+          outcomeId: id,
           action: localOpts.action,
-          goalRelationshipsPayload: {
+          outcomeRelationshipsPayload: {
             opportunityIds: splitIds(localOpts.opportunityIds),
-            solutionIds: splitIds(localOpts.solutionIds),
           },
         });
 

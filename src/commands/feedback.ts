@@ -43,12 +43,13 @@ export function registerFeedbackCommands(program: Command) {
         const ctx = await resolveContext(opts.env, opts.token);
         const client = squadClient(ctx.token, opts.env);
 
-        const result = await client.getFeedback({
+        const response = await client.getFeedbackRaw({
           orgId: ctx.orgId,
           workspaceId: ctx.workspaceId,
           feedbackId: id,
         });
 
+        const result = await response.raw.json();
         outputJson(result);
       } catch (error) {
         await handleError(error);
@@ -58,8 +59,9 @@ export function registerFeedbackCommands(program: Command) {
   feedback
     .command("create")
     .description("Create feedback")
-    .requiredOption("--title <title>", "Feedback title")
     .requiredOption("--content <content>", "Feedback content")
+    .requiredOption("--source <source>", "Source of the feedback")
+    .option("--title <title>", "Short title summarizing the feedback")
     .action(async function (this: Command) {
       try {
         const opts = getGlobalOptions(this);
@@ -70,15 +72,16 @@ export function registerFeedbackCommands(program: Command) {
         const result = await client.createFeedback({
           orgId: ctx.orgId,
           workspaceId: ctx.workspaceId,
-          createFeedbackPayload: {
-            title: localOpts.title,
+          createFeedbackRequest: {
             content: localOpts.content,
+            source: localOpts.source,
+            title: localOpts.title,
           },
         });
 
         outputJson({
-          id: result.id,
-          title: result.title,
+          id: result.data.id,
+          title: result.data.title,
           message: "Feedback created",
         });
       } catch (error) {
@@ -96,7 +99,7 @@ export function registerFeedbackCommands(program: Command) {
         const ctx = await resolveContext(opts.env, opts.token);
         const client = squadClient(ctx.token, opts.env);
 
-        await client.deleteFeedback({
+        await client.deleteFeedbackRaw({
           orgId: ctx.orgId,
           workspaceId: ctx.workspaceId,
           feedbackId: id,

@@ -44,12 +44,13 @@ export function registerInsightCommands(program: Command) {
         const ctx = await resolveContext(opts.env, opts.token);
         const client = squadClient(ctx.token, opts.env);
 
-        const result = await client.getInsight({
+        const response = await client.getInsightRaw({
           orgId: ctx.orgId,
           workspaceId: ctx.workspaceId,
           insightId: id,
         });
 
+        const result = await response.raw.json();
         outputJson(result);
       } catch (error) {
         await handleError(error);
@@ -60,8 +61,8 @@ export function registerInsightCommands(program: Command) {
     .command("create")
     .description("Create an insight")
     .requiredOption("--title <title>", "Insight title")
-    .requiredOption("--content <content>", "Insight content")
-    .option("--type <type>", "Insight type")
+    .requiredOption("--description <description>", "Description of the insight")
+    .requiredOption("--type <type>", "Insight type (Feedback, Bug, FeatureRequest)")
     .action(async function (this: Command) {
       try {
         const opts = getGlobalOptions(this);
@@ -72,16 +73,18 @@ export function registerInsightCommands(program: Command) {
         const result = await client.createInsight({
           orgId: ctx.orgId,
           workspaceId: ctx.workspaceId,
-          createInsightPayload: {
+          createInsightRequest: {
             title: localOpts.title,
-            content: localOpts.content,
+            description: localOpts.description,
             type: localOpts.type,
+            organisationId: ctx.orgId,
+            workspaceId: ctx.workspaceId,
           },
         });
 
         outputJson({
-          id: result.id,
-          title: result.title,
+          id: result.data.id,
+          title: result.data.title,
           message: "Insight created",
         });
       } catch (error) {

@@ -271,7 +271,7 @@ export async function login(env: Environment): Promise<StoredTokens> {
             status: "waiting",
             message: "Opening browser for login",
             url: authorizeUrl.toString(),
-          }),
+          }, null, 2),
         );
       } catch {
         console.error(
@@ -279,7 +279,7 @@ export async function login(env: Environment): Promise<StoredTokens> {
             status: "waiting",
             message: "Open this URL in your browser to log in",
             url: authorizeUrl.toString(),
-          }),
+          }, null, 2),
         );
       }
     });
