@@ -34,6 +34,33 @@ interface TokenResponse {
   token_type: string;
 }
 
+interface JwtExchangeResponse {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+}
+
+async function exchangeOpaqueForJwt(
+  apiUrl: string,
+  opaqueToken: string,
+): Promise<JwtExchangeResponse> {
+  const response = await fetch(`${apiUrl}/v1/auth/token`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${opaqueToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new AuthError(
+      `JWT exchange failed (HTTP ${response.status}): ${body}`,
+    );
+  }
+
+  return response.json() as Promise<JwtExchangeResponse>;
+}
+
 async function ensureClientRegistered(env: Environment): Promise<string> {
   const stored = getStoredClient(env);
   if (stored) return stored.clientId;
@@ -116,10 +143,14 @@ export async function refreshAccessToken(
   }
 
   const data = (await response.json()) as TokenResponse;
+
+  const apiUrl = getSquadApiUrl(env);
+  const jwt = await exchangeOpaqueForJwt(apiUrl, data.access_token);
+
   const tokens: StoredTokens = {
-    accessToken: data.access_token,
+    accessToken: jwt.access_token,
     refreshToken: data.refresh_token,
-    expiresAt: Math.floor(Date.now() / 1000) + data.expires_in,
+    expiresAt: Math.floor(Date.now() / 1000) + jwt.expires_in,
   };
 
   saveTokens(env, tokens);
@@ -189,10 +220,13 @@ export async function login(env: Environment): Promise<StoredTokens> {
           redirectUri,
         );
 
+        const apiUrl = getSquadApiUrl(env);
+        const jwt = await exchangeOpaqueForJwt(apiUrl, data.access_token);
+
         const tokens: StoredTokens = {
-          accessToken: data.access_token,
+          accessToken: jwt.access_token,
           refreshToken: data.refresh_token,
-          expiresAt: Math.floor(Date.now() / 1000) + data.expires_in,
+          expiresAt: Math.floor(Date.now() / 1000) + jwt.expires_in,
         };
 
         saveTokens(env, tokens);
