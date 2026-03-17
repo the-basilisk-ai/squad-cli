@@ -49,13 +49,14 @@ export function registerSolutionCommands(program: Command) {
         const ctx = await resolveContext(opts.env, opts.token);
         const client = squadClient(ctx.token, opts.env);
 
-        const result = await client.getSolution({
+        const response = await client.getSolutionRaw({
           orgId: ctx.orgId,
           workspaceId: ctx.workspaceId,
           solutionId: id,
           relationships: localOpts.relationships,
         });
 
+        const result = await response.raw.json();
         outputJson(result);
       } catch (error) {
         await handleError(error);
@@ -80,12 +81,14 @@ export function registerSolutionCommands(program: Command) {
           createSolutionPayload: {
             title: localOpts.title,
             description: localOpts.description,
+            createdBy: "user",
+            prd: "",
           },
         });
 
         outputJson({
-          id: result.id,
-          title: result.title,
+          id: result.data.id,
+          title: result.data.title,
           message: "Solution created",
         });
       } catch (error) {
@@ -119,9 +122,9 @@ export function registerSolutionCommands(program: Command) {
         });
 
         outputJson({
-          id: result.id,
-          title: result.title,
-          status: result.status,
+          id: result.data.id,
+          title: result.data.title,
+          status: result.data.status,
           message: "Solution updated",
         });
       } catch (error) {
@@ -163,14 +166,18 @@ export function registerSolutionCommands(program: Command) {
         const ctx = await resolveContext(opts.env, opts.token);
         const client = squadClient(ctx.token, opts.env);
 
-        const result = await client.editSolutionPrd({
+        const result = await client.updateSolution({
           orgId: ctx.orgId,
           workspaceId: ctx.workspaceId,
           solutionId: id,
-          editSolutionPrdPayload: { content: localOpts.content },
+          updateSolutionPayload: { prd: localOpts.content },
         });
 
-        outputJson(result);
+        outputJson({
+          id: result.data.id,
+          title: result.data.title,
+          message: "PRD updated",
+        });
       } catch (error) {
         await handleError(error);
       }
@@ -217,16 +224,23 @@ export function registerSolutionCommands(program: Command) {
 
   solution
     .command("prioritise")
-    .description("Prioritise solutions in the workspace")
+    .description("Reorder solutions in the workspace")
+    .requiredOption("--solution-ids <ids>", "Comma-separated solution IDs to move")
+    .option("--before-id <id>", "Place before this solution ID (default: end)")
     .action(async function (this: Command) {
       try {
         const opts = getGlobalOptions(this);
+        const localOpts = this.opts();
         const ctx = await resolveContext(opts.env, opts.token);
         const client = squadClient(ctx.token, opts.env);
 
         const result = await client.prioritiseSolutions({
           orgId: ctx.orgId,
           workspaceId: ctx.workspaceId,
+          prioritiseSolutionsRequest: {
+            solutionIds: localOpts.solutionIds.split(",").map((s: string) => s.trim()),
+            beforeId: localOpts.beforeId ?? null,
+          },
         });
 
         outputJson(result);

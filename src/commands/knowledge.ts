@@ -61,6 +61,7 @@ export function registerKnowledgeCommands(program: Command) {
     .command("create")
     .description("Create a knowledge item")
     .requiredOption("--title <title>", "Knowledge item title")
+    .requiredOption("--description <description>", "Short summary of the knowledge")
     .requiredOption("--content <content>", "Knowledge content")
     .action(async function (this: Command) {
       try {
@@ -74,13 +75,14 @@ export function registerKnowledgeCommands(program: Command) {
           workspaceId: ctx.workspaceId,
           createKnowledgePayload: {
             title: localOpts.title,
+            description: localOpts.description,
             content: localOpts.content,
           },
         });
 
         outputJson({
-          id: result.id,
-          title: result.title,
+          id: result.data.id,
+          title: result.data.title,
           message: "Knowledge created",
         });
       } catch (error) {
