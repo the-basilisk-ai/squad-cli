@@ -81,5 +81,5 @@ export async function handleError(error: unknown): Promise<never> {
 }
 
 function outputError(code: string, message: string): void {
-  console.error(JSON.stringify({ error: { code, message } }));
+  console.error(JSON.stringify({ error: { code, message } }, null, 2));
 }
