@@ -28,6 +28,8 @@ export function registerOpportunityCommands(program: Command) {
           id: o.id,
           title: o.title,
           status: o.status,
+          createdAt: o.createdAt,
+          updatedAt: o.updatedAt,
         }));
 
         output(items, opts.format, ["id", "title", "status"]);

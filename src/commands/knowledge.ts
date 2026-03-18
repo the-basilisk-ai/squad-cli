@@ -27,6 +27,8 @@ export function registerKnowledgeCommands(program: Command) {
         const items = result.data.map(k => ({
           id: k.id,
           title: k.title,
+          createdAt: k.createdAt,
+          updatedAt: k.updatedAt,
         }));
 
         output(items, opts.format, ["id", "title"]);
