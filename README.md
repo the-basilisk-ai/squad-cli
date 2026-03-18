@@ -36,13 +36,13 @@ squad workspace select <orgId> <workspaceId>
 | `squad opportunity generate-solutions <id>` | AI-generated solutions |
 | `squad solution prioritise --solution-ids <ids>` | AI-powered prioritisation |
 
-All commands support `--format json|table`, `--env dev|staging|production`, and `--verbose`.
+All commands support `--format json|table`.
 
 ## Configuration
 
 Config is stored in `~/.config/squad/` (respects `XDG_CONFIG_HOME`):
 
-- `auth.json` — OAuth tokens (file mode `0600`)
+- `auth.json` — OAuth tokens
 - `client.json` — Registered OAuth client IDs
 - `workspace.json` — Selected workspace per environment
 
@@ -51,7 +51,7 @@ Override auth with `SQUAD_TOKEN` env var. Select environment with `SQUAD_ENV`.
 ## Development
 
 ```bash
-yarn install --frozen-lockfile
+yarn install
 yarn build    # Build to dist/cli.js
 yarn dev      # Watch mode
 ```

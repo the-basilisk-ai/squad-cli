@@ -26,6 +26,8 @@ export function registerSolutionCommands(program: Command) {
           id: s.id,
           title: s.title,
           status: s.status,
+          createdAt: s.createdAt,
+          updatedAt: s.updatedAt,
         }));
 
         output(items, opts.format, ["id", "title", "status"]);

@@ -25,6 +25,8 @@ export function registerFeedbackCommands(program: Command) {
         const items = result.data.map(f => ({
           id: f.id,
           title: f.title,
+          createdAt: f.createdAt,
+          updatedAt: f.updatedAt,
         }));
 
         output(items, opts.format, ["id", "title"]);

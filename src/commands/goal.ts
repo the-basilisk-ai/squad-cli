@@ -28,6 +28,8 @@ export function registerGoalCommands(program: Command) {
           id: g.id,
           title: g.title,
           priority: g.priority,
+          createdAt: g.createdAt,
+          updatedAt: g.updatedAt,
         }));
 
         output(items, opts.format, ["id", "title", "priority"]);

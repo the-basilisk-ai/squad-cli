@@ -26,6 +26,8 @@ export function registerInsightCommands(program: Command) {
           id: i.id,
           title: i.title,
           type: i.type,
+          createdAt: i.createdAt,
+          updatedAt: i.updatedAt,
         }));
 
         output(items, opts.format, ["id", "title", "type"]);
