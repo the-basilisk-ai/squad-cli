@@ -1,0 +1,55 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, ready_for_review]
+
+jobs:
+  claude-review:
+    if: |
+      github.event.pull_request.author_association == 'OWNER' ||
+      github.event.pull_request.author_association == 'MEMBER' ||
+      github.event.pull_request.author_association == 'COLLABORATOR'
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Code Review
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          track_progress: true
+          use_sticky_comment: true
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            Provide a concise code review. Keep it high-signal and under ~250 words.
+            Use this structure and keep bullets tight (no prose paragraphs):
+
+            ## 1. Summary (1-2 sentences)
+            What changed and the overall assessment.
+
+            ## 2. Findings (max 6 bullets, prioritized P0-P4)
+            Only list real issues or risks. Include file:line when possible.
+
+            ## 3. Human Review (max 4 bullets)
+            Call out judgment calls, product/UX, migrations, API/contract changes, security/perf trade-offs.
+
+            ## 4. Tests & Docs
+            Note missing/updated tests or docs only if needed.
+
+            ## 5. Recommendation
+            Approve / Request changes + one sentence rationale.
+
+            Be specific, cite line numbers where relevant, and avoid restating the diff.
