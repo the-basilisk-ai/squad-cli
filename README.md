@@ -23,7 +23,7 @@ squad workspace select <orgId> <workspaceId>
 | Command | Description |
 |---------|-------------|
 | `squad auth login\|logout\|status` | Authenticate via OAuth2 PKCE |
-| `squad workspace list\|select\|get\|update` | Manage workspaces |
+| `squad workspace list\|select\|get\|update\|summary` | Manage workspaces |
 | `squad opportunity list\|get\|create\|update\|delete` | Track problem statements |
 | `squad solution list\|get\|create\|update\|delete` | Define and manage solutions |
 | `squad goal list\|get\|create\|update\|delete` | Set business objectives |
@@ -31,7 +31,7 @@ squad workspace select <orgId> <workspaceId>
 | `squad insight list\|get\|create\|delete` | Record insights |
 | `squad knowledge list\|get\|create\|delete` | Manage knowledge base |
 | `squad search <query>` | Semantic search across workspace |
-| `squad view strategy-context` | Full strategy context |
+| `squad view strategy-context [--type --id]` | Entity in strategy hierarchy |
 | `squad view roadmap` | Solutions by horizon (Now/Next/Later) |
 | `squad opportunity generate-solutions <id>` | AI-generated solutions |
 | `squad solution prioritise --solution-ids <ids>` | AI-powered prioritisation |
@@ -59,8 +59,9 @@ yarn dev      # Watch mode
 Lint and format:
 
 ```bash
-yarn format       # Check
+yarn format       # Check (Biome)
 yarn format:fix   # Auto-fix
+yarn knip         # Dead code detection (Knip)
 ```
 
 Regenerate the API client from the OpenAPI spec:

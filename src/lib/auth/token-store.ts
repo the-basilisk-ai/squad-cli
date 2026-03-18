@@ -9,7 +9,7 @@ export interface StoredTokens {
   expiresAt: number; // Unix timestamp in seconds
 }
 
-export interface StoredClient {
+interface StoredClient {
   clientId: string;
 }
 

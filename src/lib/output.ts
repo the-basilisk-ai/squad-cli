@@ -11,7 +11,7 @@ export function outputJson(data: unknown): void {
   console.log(JSON.stringify(data, null, 2));
 }
 
-export function outputTable(
+function outputTable(
   items: Record<string, unknown>[],
   columns: string[],
 ): void {

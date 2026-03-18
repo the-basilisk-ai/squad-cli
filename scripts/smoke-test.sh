@@ -142,7 +142,9 @@ run "solution prioritise"      $CLI $ENV solution prioritise --solution-ids "$SO
 run "search"                   $CLI $ENV search "onboarding"
 
 # --- Views ---
+run "workspace summary"        $CLI $ENV workspace summary
 run "view strategy-context"    $CLI $ENV view strategy-context
+run "view strategy-context goal" $CLI $ENV view strategy-context --type goal --id "$GOAL_ID"
 run "view roadmap"             $CLI $ENV view roadmap
 
 # Cleanup happens via EXIT trap
