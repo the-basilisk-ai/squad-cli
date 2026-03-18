@@ -24,8 +24,7 @@ program
       .choices(["dev", "staging", "production"])
       .default("production"),
   )
-  .option("--token <token>", "API access token (overrides stored auth)")
-  .option("--verbose", "Enable verbose output");
+  .option("--token <token>", "API access token (overrides stored auth)");
 
 registerAuthCommands(program);
 registerWorkspaceCommands(program);
@@ -42,7 +41,6 @@ export interface GlobalOptions {
   format: string;
   env: Environment;
   token?: string;
-  verbose?: boolean;
 }
 
 export function getGlobalOptions(cmd: Command): GlobalOptions {
@@ -51,7 +49,6 @@ export function getGlobalOptions(cmd: Command): GlobalOptions {
     format: root.format ?? "json",
     env: root.env ?? "production",
     token: root.token,
-    verbose: root.verbose,
   };
 }
 
