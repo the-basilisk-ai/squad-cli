@@ -2,6 +2,8 @@
 
 Command-line interface for [Squad AI](https://meetsquad.ai) — manage product strategy (goals, opportunities, solutions, feedback, insights) from your terminal or AI agent workflows.
 
+See the [full documentation](https://docs.meetsquad.ai/guides/squad-cli) for detailed usage guides and examples.
+
 ## Install
 
 ```bash
