@@ -23,4 +23,5 @@ jobs:
 
       - run: yarn install --frozen-lockfile
       - run: yarn format
+      - run: yarn knip
       - run: yarn build
