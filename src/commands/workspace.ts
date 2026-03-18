@@ -108,10 +108,11 @@ export function registerWorkspaceCommands(program: Command) {
           include: "solutions",
         });
 
+        const summary = result.data.report;
         if (opts.format === "json") {
-          outputJson(result);
+          outputJson({ summary });
         } else {
-          console.log(result.data.report);
+          console.log(summary);
         }
       } catch (error) {
         await handleError(error);
