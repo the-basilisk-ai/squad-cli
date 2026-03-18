@@ -1,11 +1,9 @@
 import { ResponseError } from "./openapi/squad/runtime.js";
 
-export const EXIT_SUCCESS = 0;
-export const EXIT_ERROR = 1;
-export const EXIT_AUTH_ERROR = 2;
-export const EXIT_VALIDATION_ERROR = 3;
+const EXIT_ERROR = 1;
+const EXIT_AUTH_ERROR = 2;
 
-export class SquadError extends Error {
+class SquadError extends Error {
   constructor(
     message: string,
     public code: string,
@@ -23,14 +21,7 @@ export class AuthError extends SquadError {
   }
 }
 
-export class ValidationError extends SquadError {
-  constructor(message: string) {
-    super(message, "VALIDATION_ERROR", EXIT_VALIDATION_ERROR);
-    this.name = "ValidationError";
-  }
-}
-
-export async function formatApiError(error: unknown): Promise<string> {
+async function formatApiError(error: unknown): Promise<string> {
   if (!(error instanceof ResponseError)) {
     return error instanceof Error ? error.message : "Unknown error";
   }

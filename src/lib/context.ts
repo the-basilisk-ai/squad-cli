@@ -6,12 +6,12 @@ import { getTokens, isTokenExpired } from "./auth/token-store.js";
 import type { Environment } from "./config.js";
 import { AuthError } from "./errors.js";
 
-export interface WorkspaceSelection {
+interface WorkspaceSelection {
   orgId: string;
   workspaceId: string;
 }
 
-export interface CommandContext {
+interface CommandContext {
   token: string;
   env: Environment;
   orgId: string;
@@ -30,9 +30,7 @@ function getWorkspacePath(): string {
   return path.join(getConfigDir(), "workspace.json");
 }
 
-export function getWorkspaceSelection(
-  env: Environment,
-): WorkspaceSelection | null {
+function getWorkspaceSelection(env: Environment): WorkspaceSelection | null {
   const wsPath = getWorkspacePath();
   if (!fs.existsSync(wsPath)) return null;
   try {

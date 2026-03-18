@@ -94,6 +94,31 @@ export function registerWorkspaceCommands(program: Command) {
     });
 
   workspace
+    .command("summary")
+    .description("View a pre-rendered summary of the workspace strategy")
+    .action(async function (this: Command) {
+      try {
+        const opts = getGlobalOptions(this);
+        const ctx = await resolveContext(opts.env, opts.token);
+        const client = squadClient(ctx.token, opts.env);
+
+        const result = await client.getStrategyDocument({
+          orgId: ctx.orgId,
+          workspaceId: ctx.workspaceId,
+          include: "solutions",
+        });
+
+        if (opts.format === "json") {
+          outputJson(result);
+        } else {
+          console.log(result.data.report);
+        }
+      } catch (error) {
+        await handleError(error);
+      }
+    });
+
+  workspace
     .command("update")
     .description("Update current workspace")
     .option("--name <name>", "Workspace name")
