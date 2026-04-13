@@ -37,7 +37,7 @@
     "@openapitools/openapi-generator-cli": "^2.30.2",
     "@types/node": "^22.15.0",
     "husky": "^9.1.7",
-    "knip": "^5.87.0",
+    "knip": "^6.4.1",
     "tsup": "^8.4.0",
     "tsx": "^4.21.0",
     "typescript": "^6.0.2"
