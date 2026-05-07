@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.1](https://github.com/the-basilisk-ai/squad-cli/compare/cli-v0.3.0...cli-v0.3.1) (2026-05-07)
+
+
+### Bug Fixes
+
+* **ci:** use claude_code_oauth_token instead of anthropic_api_key ([#16](https://github.com/the-basilisk-ai/squad-cli/issues/16)) ([841c1d0](https://github.com/the-basilisk-ai/squad-cli/commit/841c1d0511cb8a71b0bf3ef0a10e02829905149d))
+* resolve Dependabot security vulnerabilities ([#19](https://github.com/the-basilisk-ai/squad-cli/issues/19)) ([a7d390d](https://github.com/the-basilisk-ai/squad-cli/commit/a7d390de2f531f2d5868b0d50921978ea5e80aae))
+
 ## [0.3.0](https://github.com/the-basilisk-ai/squad-cli/compare/cli-v0.2.0...cli-v0.3.0) (2026-03-18)
 
 
