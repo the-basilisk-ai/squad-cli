@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/the-basilisk-ai/squad-cli/compare/cli-v0.3.1...cli-v0.3.2) (2026-05-11)
+
+
+### Bug Fixes
+
+* bump axios resolution to 1.16.0 to address Dependabot alerts ([#38](https://github.com/the-basilisk-ai/squad-cli/issues/38)) ([189afd0](https://github.com/the-basilisk-ai/squad-cli/commit/189afd0cbbc4b043ca30c29f98c49de0de21d6de))
+
 ## [0.3.1](https://github.com/the-basilisk-ai/squad-cli/compare/cli-v0.3.0...cli-v0.3.1) (2026-05-07)
 
 
