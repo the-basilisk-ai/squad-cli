@@ -866,9 +866,9 @@
     undici-types "~6.21.0"
 
 "@types/node@^22.15.0":
-  version "22.19.19"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-22.19.19.tgz#3124bf26ded54168b768138321fef99b420c6112"
-  integrity sha512-dyh/xO2Fh5bYrfWaaqGrRQQGkNdmYw6AmaAUvYeUMNTWQtvb796ikLdmTchRmOlOiIJ1TDXfWgVx1QkUlQ6Hew==
+  version "22.19.20"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-22.19.20.tgz#243823634b177312895dab14a7fb1d0103094313"
+  integrity sha512-6tELRwSDYWW9EdZhbeZmYGZ1/7Djkt+Ah3/ScEYT9cDord7UJzasR/4D3VONg9tQI5CDp+/CZC1AXj2pCFOvpw==
   dependencies:
     undici-types "~6.21.0"
 
@@ -1545,15 +1545,14 @@ jsonfile@^6.0.1:
     graceful-fs "^4.1.6"
 
 knip@^6.4.1:
-  version "6.15.0"
-  resolved "https://registry.yarnpkg.com/knip/-/knip-6.15.0.tgz#b0feb5be6582a309e15e0f47a55afed100fc006d"
-  integrity sha512-uBaKFEGcu/HG4EY2gWFBMr+fBF43Jftoc2riJX51TKME1Z46C8UQIbNEusenYbEWihphxe2PY0Kns0yPvPYz4A==
+  version "6.16.1"
+  resolved "https://registry.yarnpkg.com/knip/-/knip-6.16.1.tgz#ca3c83a46d7a8770a0debce14ba23240c572a02c"
+  integrity sha512-TKMn1rxgH6h9vXR9Y0B+Cq7AdPTr9EI02IwoT65NzqYUkvoDQAaJ/aPybiFpAhZ1px6cNYYwXf86iHkBgzCo9w==
   dependencies:
     fdir "^6.5.0"
     formatly "^0.3.0"
     get-tsconfig "4.14.0"
     jiti "^2.7.0"
-    minimist "^1.2.8"
     oxc-parser "^0.133.0"
     oxc-resolver "^11.20.0"
     picomatch "^4.0.4"
@@ -1624,11 +1623,6 @@ minimatch@^10.2.2:
   integrity sha512-oRjTw/97aTBN0RHbYCdtF1MQfvusSIBQM0IZEgzl6426+8jSC0nF1a/GmnVLpfB9yyr6g6FTqWqiZVbxrtaCIg==
   dependencies:
     brace-expansion "^5.0.2"
-
-minimist@^1.2.8:
-  version "1.2.8"
-  resolved "https://registry.yarnpkg.com/minimist/-/minimist-1.2.8.tgz#c1a464e7693302e082a075cee0c057741ac4772c"
-  integrity sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==
 
 minipass@^7.1.2, minipass@^7.1.3:
   version "7.1.3"
