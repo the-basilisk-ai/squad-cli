@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.4](https://github.com/the-basilisk-ai/squad-cli/compare/cli-v0.3.3...cli-v0.3.4) (2026-07-13)
+
+
+### Bug Fixes
+
+* **config:** point API and auth URLs at v1 subdomain ([#56](https://github.com/the-basilisk-ai/squad-cli/issues/56)) ([307afe3](https://github.com/the-basilisk-ai/squad-cli/commit/307afe3ee470736bf2b883f02baf3c40b59de860))
+
 ## [0.3.3](https://github.com/the-basilisk-ai/squad-cli/compare/cli-v0.3.2...cli-v0.3.3) (2026-06-15)
 
 
