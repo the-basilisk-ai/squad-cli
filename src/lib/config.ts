@@ -8,7 +8,7 @@ export function getPropelAuthUrl(env?: Environment): string {
     return "https://26904088430.propelauthtest.com";
   }
   if (squadEnv === "staging") {
-    return "https://auth.app.v1.meetsquad.ai";
+    return "https://auth.uat.v1.meetsquad.ai";
   }
   return "https://auth.v1.meetsquad.ai";
 }
