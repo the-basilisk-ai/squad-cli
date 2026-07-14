@@ -30,11 +30,8 @@ describe("config URL resolution", () => {
     expect(getPropelAuthUrl("production")).toBe("https://auth.meetsquad.ai");
   });
 
-  it("falls back to SQUAD_ENV then production", () => {
-    process.env.SQUAD_ENV = "dev";
+  it("defaults to production when no env is given", () => {
     delete process.env.SQUAD_GRAPHQL_URL;
-    expect(getSquadApiUrl()).toBe("https://dev.api.v2.meetsquad.ai");
-    process.env.SQUAD_ENV = "";
     expect(getSquadApiUrl()).toBe("https://api.meetsquad.ai");
   });
 

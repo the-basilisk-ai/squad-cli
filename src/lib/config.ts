@@ -1,15 +1,16 @@
 /**
  * Environment switching for the Squad platform.
  *
- * The new Squad platform has two environments: dev and production.
- * Resolution order for each URL: explicit `env` argument, then the
- * `SQUAD_ENV` environment variable, then production.
+ * The platform has two environments: dev and production. The environment is
+ * chosen by the internal `--env` flag (production by default) and threaded
+ * through as an explicit `env` argument; each URL getter falls back to
+ * production when none is given.
  */
 
 export type Environment = "dev" | "production";
 
 function resolveEnv(env?: Environment): Environment {
-  return env ?? (process.env.SQUAD_ENV as Environment) ?? "production";
+  return env ?? "production";
 }
 
 /** PropelAuth issuer for the OAuth 2.1 login flow. */

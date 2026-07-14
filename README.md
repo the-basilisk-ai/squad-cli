@@ -56,7 +56,7 @@ squad workspace overview  # Orient: mission, goals, activity, open work
 
 Entities are addressed by display ID: `SI` signal, `IN` insight, `AC` action,
 `GL` goal, `OP` decision brief, `DC` document, `RQ` research question, `CL`
-cluster. All commands support `--format json|table` and `--env dev|production`.
+cluster. All commands support `--format json|table`.
 
 ## Configuration
 
@@ -71,9 +71,8 @@ opaque token is exchanged with the platform for a short-lived service JWT (scope
 to the selected org), which is sent with every GraphQL request together with an
 `x-workspace-id` header.
 
-Override auth with `SQUAD_TOKEN` (a service JWT). Select environment with
-`SQUAD_ENV` (`dev` or `production`) or `--env`. `SQUAD_GRAPHQL_URL` overrides the
-GraphQL endpoint.
+Override auth with `SQUAD_TOKEN` (a service JWT). `SQUAD_GRAPHQL_URL` overrides
+the GraphQL endpoint.
 
 ## Development
 
