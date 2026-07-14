@@ -1,0 +1,15 @@
+mutation CliUpdateWorkspace(
+  $where: WorkspaceWhere!
+  $update: WorkspaceUpdateInput!
+) {
+  updateWorkspaces(where: $where, update: $update) {
+    workspaces {
+      id
+      name
+      description
+      missionStatement
+      logoUrl
+      slug
+    }
+  }
+}

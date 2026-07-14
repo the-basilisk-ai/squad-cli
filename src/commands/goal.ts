@@ -1,192 +1,120 @@
 import type { Command } from "commander";
 import { getGlobalOptions } from "../cli.js";
-import { squadClient } from "../lib/clients/squad.js";
+import {
+  CliCreateGoalDocument,
+  CliGoalListDocument,
+  CliUpdateGoalDocument,
+} from "../gql/graphql.js";
 import { resolveContext } from "../lib/context.js";
+import { formatDisplayId } from "../lib/display-id.js";
 import { handleError } from "../lib/errors.js";
-import { omitUndefined, output, outputJson } from "../lib/output.js";
+import { execute } from "../lib/graphql/execute.js";
+import {
+  clampLimit,
+  omitUndefined,
+  output,
+  outputJson,
+  parseOffset,
+} from "../lib/output.js";
 
 export function registerGoalCommands(program: Command) {
-  const goal = program
-    .command("goal")
-    .description("Manage goals (business outcomes)");
+  const goal = program.command("goal").description("Manage strategic goals");
 
   goal
     .command("list")
-    .description("List all goals")
+    .description("List strategic goals ordered by importance")
+    .option("--min-importance <n>", "Only goals at or above this importance")
+    .option("--limit <n>", "Max results (default 25, max 100)")
+    .option("--offset <n>", "Pagination offset")
     .action(async function (this: Command) {
       try {
         const opts = getGlobalOptions(this);
+        const o = this.opts();
         const ctx = await resolveContext(opts.env, opts.token);
-        const client = squadClient(ctx.token, opts.env);
 
-        const result = await client.listGoals({
-          orgId: ctx.orgId,
-          workspaceId: ctx.workspaceId,
-        });
-
-        const items = result.data.map(g => ({
-          id: g.id,
+        const data = await execute(
+          CliGoalListDocument,
+          {
+            limit: clampLimit(o.limit),
+            offset: parseOffset(o.offset),
+            minImportance:
+              o.minImportance != null ? Number(o.minImportance) : undefined,
+          },
+          ctx,
+        );
+        const rows = (data.goalList ?? []).map(g => ({
+          displayId: formatDisplayId("goal", g.displayId) ?? g.id,
           title: g.title,
-          priority: g.priority,
-          createdAt: g.createdAt,
-          updatedAt: g.updatedAt,
+          importance: g.importance,
         }));
-
-        output(items, opts.format, ["id", "title", "priority"]);
+        output(rows, opts.format, ["displayId", "title", "importance"]);
       } catch (error) {
-        await handleError(error);
-      }
-    });
-
-  goal
-    .command("get")
-    .description("Get goal details")
-    .argument("<id>", "Goal ID")
-    .option(
-      "--relationships <types>",
-      "Include relationships (comma-separated: opportunities,solutions)",
-    )
-    .action(async function (this: Command, id: string) {
-      try {
-        const opts = getGlobalOptions(this);
-        const localOpts = this.opts();
-        const ctx = await resolveContext(opts.env, opts.token);
-        const client = squadClient(ctx.token, opts.env);
-
-        const response = await client.getGoalRaw({
-          orgId: ctx.orgId,
-          workspaceId: ctx.workspaceId,
-          outcomeId: id,
-          relationships: localOpts.relationships,
-        });
-
-        const result = await response.raw.json();
-        outputJson(result);
-      } catch (error) {
-        await handleError(error);
+        handleError(error);
       }
     });
 
   goal
     .command("create")
-    .description("Create a new goal")
+    .description("Create a strategic goal")
     .requiredOption("--title <title>", "Goal title")
-    .option("--description <description>", "Goal description")
-    .option("--priority <priority>", "Priority level (number)", "0")
+    .requiredOption(
+      "--description <description>",
+      "What success looks like and why",
+    )
+    .option("--importance <n>", "Importance 1-5 (default 3)", "3")
     .action(async function (this: Command) {
       try {
         const opts = getGlobalOptions(this);
-        const localOpts = this.opts();
+        const o = this.opts();
         const ctx = await resolveContext(opts.env, opts.token);
-        const client = squadClient(ctx.token, opts.env);
 
-        const result = await client.createGoal({
-          orgId: ctx.orgId,
-          workspaceId: ctx.workspaceId,
-          createOutcomePayload: {
-            title: localOpts.title,
-            description: localOpts.description ?? "",
-            priority: Number(localOpts.priority),
+        const data = await execute(
+          CliCreateGoalDocument,
+          {
+            input: {
+              title: o.title,
+              content: o.description,
+              importance: Number(o.importance),
+            },
           },
-        });
-
-        outputJson({
-          id: result.data.id,
-          title: result.data.title,
-          message: "Goal created",
-        });
+          ctx,
+        );
+        outputJson({ message: "Goal created", goal: data.createGoal });
       } catch (error) {
-        await handleError(error);
+        handleError(error);
       }
     });
 
   goal
     .command("update")
-    .description("Update a goal")
-    .argument("<id>", "Goal ID")
+    .description("Update a goal's title, description or importance")
+    .argument("<goalId>", "Goal display ID (GL-N) or UUID")
     .option("--title <title>", "Updated title")
     .option("--description <description>", "Updated description")
-    .action(async function (this: Command, id: string) {
+    .option("--importance <n>", "Updated importance 1-5")
+    .action(async function (this: Command, goalId: string) {
       try {
         const opts = getGlobalOptions(this);
-        const localOpts = this.opts();
+        const o = this.opts();
         const ctx = await resolveContext(opts.env, opts.token);
-        const client = squadClient(ctx.token, opts.env);
 
-        const result = await client.updateGoal({
-          orgId: ctx.orgId,
-          workspaceId: ctx.workspaceId,
-          outcomeId: id,
-          updateOutcomePayload: omitUndefined({
-            title: localOpts.title,
-            description: localOpts.description,
-          }),
-        });
-
-        outputJson({
-          id: result.data.id,
-          title: result.data.title,
-          message: "Goal updated",
-        });
-      } catch (error) {
-        await handleError(error);
-      }
-    });
-
-  goal
-    .command("delete")
-    .description("Delete a goal")
-    .argument("<id>", "Goal ID")
-    .action(async function (this: Command, id: string) {
-      try {
-        const opts = getGlobalOptions(this);
-        const ctx = await resolveContext(opts.env, opts.token);
-        const client = squadClient(ctx.token, opts.env);
-
-        await client.deleteGoal({
-          orgId: ctx.orgId,
-          workspaceId: ctx.workspaceId,
-          outcomeId: id,
-        });
-
-        outputJson({ id, message: "Goal deleted" });
-      } catch (error) {
-        await handleError(error);
-      }
-    });
-
-  goal
-    .command("relationships")
-    .description("Manage goal relationships")
-    .argument("<id>", "Goal ID")
-    .requiredOption("--action <action>", "add or remove")
-    .option("--opportunity-ids <ids>", "Comma-separated opportunity IDs")
-    .action(async function (this: Command, id: string) {
-      try {
-        const opts = getGlobalOptions(this);
-        const localOpts = this.opts();
-        const ctx = await resolveContext(opts.env, opts.token);
-        const client = squadClient(ctx.token, opts.env);
-
-        const splitIds = (s?: string) =>
-          s ? s.split(",").map(i => i.trim()) : [];
-
-        await client.manageGoalRelationships({
-          orgId: ctx.orgId,
-          workspaceId: ctx.workspaceId,
-          outcomeId: id,
-          action: localOpts.action,
-          outcomeRelationshipsPayload: {
-            opportunityIds: splitIds(localOpts.opportunityIds),
+        const data = await execute(
+          CliUpdateGoalDocument,
+          {
+            id: goalId,
+            input: omitUndefined({
+              title: o.title,
+              content: o.description,
+              importance:
+                o.importance != null ? Number(o.importance) : undefined,
+              createVersion: true,
+            }),
           },
-        });
-
-        outputJson({
-          id,
-          message: `Relationships ${localOpts.action === "add" ? "added" : "removed"}`,
-        });
+          ctx,
+        );
+        outputJson({ message: "Goal updated", goal: data.updateGoal });
       } catch (error) {
-        await handleError(error);
+        handleError(error);
       }
     });
 }

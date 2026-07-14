@@ -1,12 +1,20 @@
 import type { Command } from "commander";
 import { getGlobalOptions } from "../cli.js";
-import { squadClient } from "../lib/clients/squad.js";
 import {
+  CliOrgMemberListDocument,
+  CliUpdateWorkspaceDocument,
+  CliWorkspaceOverviewDocument,
+} from "../gql/graphql.js";
+import {
+  fetchWorkspaceDirectory,
+  getWorkspaceSelection,
   resolveContext,
-  resolveToken,
   setWorkspaceSelection,
 } from "../lib/context.js";
+import { formatDisplayId } from "../lib/display-id.js";
 import { handleError } from "../lib/errors.js";
+import { appLink } from "../lib/format.js";
+import { execute } from "../lib/graphql/execute.js";
 import { omitUndefined, output, outputJson } from "../lib/output.js";
 
 export function registerWorkspaceCommands(program: Command) {
@@ -16,34 +24,31 @@ export function registerWorkspaceCommands(program: Command) {
 
   workspace
     .command("list")
-    .description("List available workspaces across all organisations")
+    .description("List every organisation and workspace you can access")
     .action(async function (this: Command) {
       try {
         const opts = getGlobalOptions(this);
-        const token = await resolveToken(opts.env, opts.token);
-        const client = squadClient(token, opts.env);
+        const directory = await fetchWorkspaceDirectory(opts.env);
+        const current = getWorkspaceSelection(opts.env);
 
-        const orgs = await client.listOrganisations();
-        const results = await Promise.all(
-          orgs.data.map(async org => {
-            const ws = await client.listWorkspaces({ orgId: org.id });
-            return (ws.data ?? []).map((w: { id: string; name?: string }) => ({
-              orgId: org.id,
-              orgName: org.name,
-              workspaceId: w.id,
-              workspaceName: w.name,
-            }));
-          }),
-        );
+        const rows = directory.workspaces.map(ws => ({
+          orgId: ws.orgId,
+          orgName: ws.orgName,
+          workspaceId: ws.id,
+          workspaceName: ws.name,
+          selected:
+            current?.orgId === ws.orgId && current?.workspaceId === ws.id,
+        }));
 
-        output(results.flat(), opts.format, [
+        output(rows, opts.format, [
           "orgId",
           "orgName",
           "workspaceId",
           "workspaceName",
+          "selected",
         ]);
       } catch (error) {
-        await handleError(error);
+        handleError(error);
       }
     });
 
@@ -55,100 +60,133 @@ export function registerWorkspaceCommands(program: Command) {
     .action(async function (this: Command, orgId: string, workspaceId: string) {
       try {
         const opts = getGlobalOptions(this);
-        const token = await resolveToken(opts.env, opts.token);
-        const client = squadClient(token, opts.env);
+        const directory = await fetchWorkspaceDirectory(opts.env, orgId);
+        const ws = directory.workspaces.find(
+          w => w.id === workspaceId && w.orgId === orgId,
+        );
+        if (!ws) {
+          throw new Error(
+            `Workspace ${workspaceId} not found in organisation ${orgId}. Run: squad workspace list`,
+          );
+        }
 
-        // Validate the org/workspace exists before persisting
-        const workspace = await client.getWorkspace({ orgId, workspaceId });
-
-        setWorkspaceSelection(opts.env, { orgId, workspaceId });
+        setWorkspaceSelection(opts.env, {
+          orgId,
+          workspaceId,
+          orgSlug: ws.orgSlug,
+          workspaceSlug: ws.slug,
+        });
         outputJson({
           message: "Workspace selected",
           orgId,
+          orgName: ws.orgName,
           workspaceId,
-          workspaceName: workspace.name,
+          workspaceName: ws.name,
         });
       } catch (error) {
-        await handleError(error);
+        handleError(error);
       }
     });
 
   workspace
-    .command("get")
-    .description("Get current workspace details")
+    .command("overview")
+    .description(
+      "One-call orientation: mission, top goals, recent signal activity, evidence-chain health and open work",
+    )
     .action(async function (this: Command) {
       try {
         const opts = getGlobalOptions(this);
         const ctx = await resolveContext(opts.env, opts.token);
-        const client = squadClient(ctx.token, opts.env);
+        const data = await execute(
+          CliWorkspaceOverviewDocument,
+          { workspaceId: ctx.workspaceId, days: 7 },
+          ctx,
+        );
 
-        const result = await client.getWorkspace({
-          orgId: ctx.orgId,
-          workspaceId: ctx.workspaceId,
+        const ws = data.workspaces?.[0];
+        const cap = (n: number) => (n >= 50 ? "50+" : n);
+        outputJson({
+          workspace: ws
+            ? {
+                name: ws.name,
+                description: ws.description,
+                missionStatement: ws.missionStatement,
+                onboardingStatus: ws.onboardingStatus,
+              }
+            : null,
+          topGoals: (data.goalList ?? []).map(g => ({
+            displayId: formatDisplayId("goal", g.displayId),
+            title: g.title,
+            importance: g.importance,
+          })),
+          signalActivityLast7Days: (data.signalActivitySummary ?? []).flatMap(
+            row =>
+              row.source ? [{ source: row.source, count: row.count ?? 0 }] : [],
+          ),
+          chainHealth: data.chainHealth ?? null,
+          openActionCount: cap(data.openActions?.length ?? 0),
+          pendingDecisionBriefCount: cap(data.pendingBriefs?.length ?? 0),
+          link: appLink(opts.env, ctx.orgSlug, ctx.workspaceSlug),
         });
-
-        outputJson(result);
       } catch (error) {
-        await handleError(error);
-      }
-    });
-
-  workspace
-    .command("summary")
-    .description("View a pre-rendered summary of the workspace strategy")
-    .action(async function (this: Command) {
-      try {
-        const opts = getGlobalOptions(this);
-        const ctx = await resolveContext(opts.env, opts.token);
-        const client = squadClient(ctx.token, opts.env);
-
-        const result = await client.getStrategyDocument({
-          orgId: ctx.orgId,
-          workspaceId: ctx.workspaceId,
-          include: "solutions",
-        });
-
-        const summary = result.data.report;
-        if (opts.format === "json") {
-          outputJson({ summary });
-        } else {
-          console.log(summary);
-        }
-      } catch (error) {
-        await handleError(error);
+        handleError(error);
       }
     });
 
   workspace
     .command("update")
-    .description("Update current workspace")
+    .description("Update the current workspace")
     .option("--name <name>", "Workspace name")
     .option("--description <description>", "Workspace description")
     .option("--mission-statement <statement>", "Mission statement")
-    .option("--homepage-url <url>", "Homepage URL")
-    .option("--logo-url <url>", "Logo URL")
+    .option("--logo-url <url>", "Logo URL (https:// or data URL)")
     .action(async function (this: Command) {
       try {
         const opts = getGlobalOptions(this);
         const localOpts = this.opts();
         const ctx = await resolveContext(opts.env, opts.token);
-        const client = squadClient(ctx.token, opts.env);
 
-        const result = await client.updateWorkspace({
-          orgId: ctx.orgId,
-          workspaceId: ctx.workspaceId,
-          updateWorkspacePayload: omitUndefined({
-            name: localOpts.name,
-            description: localOpts.description,
-            missionStatement: localOpts.missionStatement,
-            homepageUrl: localOpts.homepageUrl,
-            logoUrl: localOpts.logoUrl,
-          }),
+        const data = await execute(
+          CliUpdateWorkspaceDocument,
+          {
+            where: { id: { eq: ctx.workspaceId } },
+            update: omitUndefined({
+              name: localOpts.name,
+              description: localOpts.description,
+              missionStatement: localOpts.missionStatement,
+              logoUrl: localOpts.logoUrl,
+            }),
+          },
+          ctx,
+        );
+
+        const updated = data.updateWorkspaces?.workspaces?.[0];
+        outputJson({
+          message: "Workspace updated",
+          workspace: updated ?? null,
         });
-
-        outputJson(result);
       } catch (error) {
-        await handleError(error);
+        handleError(error);
+      }
+    });
+
+  workspace
+    .command("members")
+    .description("List people in the current organisation with their user IDs")
+    .action(async function (this: Command) {
+      try {
+        const opts = getGlobalOptions(this);
+        const ctx = await resolveContext(opts.env, opts.token);
+        const data = await execute(CliOrgMemberListDocument, {}, ctx);
+
+        const rows = (data.orgMemberList ?? []).map(m => ({
+          userId: m.userId,
+          name: m.displayName ?? m.email,
+          email: m.email,
+        }));
+        output(rows, opts.format, ["userId", "name", "email"]);
+      } catch (error) {
+        handleError(error);
       }
     });
 }

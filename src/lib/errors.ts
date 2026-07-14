@@ -1,5 +1,3 @@
-import { ResponseError } from "./openapi/squad/runtime.js";
-
 const EXIT_ERROR = 1;
 const EXIT_AUTH_ERROR = 2;
 
@@ -21,54 +19,27 @@ export class AuthError extends SquadError {
   }
 }
 
-async function formatApiError(error: unknown): Promise<string> {
-  if (!(error instanceof ResponseError)) {
-    return error instanceof Error ? error.message : "Unknown error";
+/** Error raised by the GraphQL/REST transport when a request fails. */
+export class SquadApiError extends SquadError {
+  constructor(
+    message: string,
+    public status?: number,
+  ) {
+    const isAuth = status === 401 || status === 403;
+    super(message, isAuth ? "AUTH_ERROR" : "API_ERROR", isAuth ? 2 : 1);
+    this.name = "SquadApiError";
   }
-
-  const { status } = error.response;
-
-  if (status === 402) {
-    return "Your workspace has run out of AI credits. Please purchase flex credits or upgrade your plan.";
-  }
-
-  if (status === 401 || status === 403) {
-    return "Authentication failed. Please run: squad auth login";
-  }
-
-  try {
-    const body: unknown = await error.response.json();
-    if (
-      typeof body === "object" &&
-      body !== null &&
-      "error" in body &&
-      typeof (body as Record<string, unknown>).error === "object"
-    ) {
-      const apiError = (body as { error: Record<string, unknown> }).error;
-      if (typeof apiError.description === "string") {
-        return `${apiError.description} (HTTP ${status})`;
-      }
-    }
-  } catch {
-    // Body wasn't JSON or already consumed
-  }
-
-  return `API request failed (HTTP ${status})`;
 }
 
-export async function handleError(error: unknown): Promise<never> {
+export function handleError(error: unknown): never {
   if (error instanceof SquadError) {
     outputError(error.code, error.message);
     process.exit(error.exitCode);
   }
 
-  const message = await formatApiError(error);
-  const isAuth =
-    error instanceof ResponseError &&
-    (error.response.status === 401 || error.response.status === 403);
-
-  outputError(isAuth ? "AUTH_ERROR" : "API_ERROR", message);
-  process.exit(isAuth ? EXIT_AUTH_ERROR : EXIT_ERROR);
+  const message = error instanceof Error ? error.message : "Unknown error";
+  outputError("ERROR", message);
+  process.exit(EXIT_ERROR);
 }
 
 function outputError(code: string, message: string): void {

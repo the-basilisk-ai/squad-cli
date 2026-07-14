@@ -1,0 +1,131 @@
+fragment ActionEcho on Action {
+  id
+  displayId
+  title
+  status
+  priority
+  category
+  effort
+  notes
+  snoozedUntil
+  assignee {
+    userId
+    displayName
+  }
+}
+
+mutation CliStartAction($id: String!) {
+  startAction(id: $id) {
+    ...ActionEcho
+  }
+}
+
+mutation CliMarkActionDone($id: String!) {
+  markActionDone(id: $id) {
+    ...ActionEcho
+  }
+}
+
+mutation CliDismissAction($actionId: String!) {
+  dismissAction(actionId: $actionId) {
+    ...ActionEcho
+  }
+}
+
+mutation CliSnoozeAction($actionId: String!) {
+  snoozeAction(actionId: $actionId) {
+    ...ActionEcho
+  }
+}
+
+mutation CliAssignAction($actionId: String!, $assigneeUserId: String) {
+  assignAction(actionId: $actionId, assigneeUserId: $assigneeUserId) {
+    ...ActionEcho
+  }
+}
+
+mutation CliUpdateActionNotes($actionId: String!, $notes: String!) {
+  updateActionNotes(actionId: $actionId, notes: $notes) {
+    ...ActionEcho
+  }
+}
+
+mutation CliUpdateActionMeta($actionId: String!, $input: UpdateActionInput!) {
+  updateAction(actionId: $actionId, input: $input) {
+    ...ActionEcho
+  }
+}
+
+mutation CliLinkAction($actionId: String!, $target: ActionLinkTargetInput!) {
+  linkAction(actionId: $actionId, target: $target) {
+    ...ActionEcho
+  }
+}
+
+mutation CliCreateGoal($input: CreateGoalInput!) {
+  createGoal(input: $input) {
+    id
+    displayId
+    title
+    content
+    importance
+  }
+}
+
+mutation CliUpdateGoal($id: String!, $input: UpdateGoalInput!) {
+  updateGoal(id: $id, input: $input) {
+    id
+    displayId
+    title
+    content
+    importance
+  }
+}
+
+mutation CliUpdateInsightMeta($id: String!, $input: UpdateInsightInput!) {
+  updateInsight(id: $id, input: $input) {
+    id
+    displayId
+    title
+    category
+    status
+  }
+}
+
+mutation CliLinkEntities($input: LinkEntitiesInput!) {
+  linkEntities(input: $input) {
+    success
+    error
+  }
+}
+
+mutation CliUnlinkEntities($input: UnlinkEntitiesInput!) {
+  unlinkEntities(input: $input) {
+    success
+    error
+  }
+}
+
+mutation CliDeleteSignal($id: String!) {
+  deleteSignal(id: $id)
+}
+
+mutation CliCreateResearchQuestion(
+  $question: String!
+  $goalId: String
+  $category: String
+  $rationale: String
+) {
+  createResearchQuestion(
+    question: $question
+    goalId: $goalId
+    category: $category
+    rationale: $rationale
+  ) {
+    id
+    displayId
+    question
+    category
+    sufficiencyStatus
+  }
+}

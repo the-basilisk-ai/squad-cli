@@ -28,7 +28,7 @@
   },
   "overrides": [
     {
-      "includes": ["src/lib/openapi/**", "openapi/**", "scripts/**", "dist/**"],
+      "includes": ["src/gql/**", "dist/**"],
       "linter": {
         "enabled": false
       },

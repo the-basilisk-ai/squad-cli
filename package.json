@@ -25,28 +25,30 @@
     "format": "biome check .",
     "format:fix": "biome check --write .",
     "knip": "knip",
-    "openapi:squad": "npx tsx ./scripts/openapi-unify-tags.ts && openapi-generator-cli generate -g typescript-fetch -c ./openapi-generator-config.json -i ./openapi/squad.json -o src/lib/openapi/squad",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "codegen": "graphql-codegen --config codegen.ts",
+    "codegen:check": "graphql-codegen --config codegen.ts --check",
     "prepare": "husky"
   },
   "dependencies": {
+    "@graphql-typed-document-node/core": "^3.2.0",
     "commander": "^15.0.0",
+    "graphql": "^17.0.2",
     "open": "^11.0.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.6",
-    "@openapitools/openapi-generator-cli": "^2.30.2",
+    "@graphql-codegen/cli": "^7.2.0",
+    "@graphql-codegen/client-preset": "^6.1.0",
     "@types/node": "^22.15.0",
     "husky": "^9.1.7",
     "knip": "^6.4.1",
     "tsup": "^8.4.0",
-    "tsx": "^4.21.0",
-    "typescript": "^6.0.2"
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.9"
   },
   "resolutions": {
-    "**/basic-ftp": "5.2.2",
-    "**/axios": "1.16.0",
-    "**/@nestjs/core": "11.1.19",
-    "**/micromatch/picomatch": "2.3.2",
     "**/knip/picomatch": "4.0.4",
     "**/tinyglobby/picomatch": "4.0.4",
     "**/esbuild": "0.28.1"

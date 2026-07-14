@@ -2,14 +2,17 @@ import crypto from "node:crypto";
 import http from "node:http";
 import { URL } from "node:url";
 import type { Environment } from "../config.js";
-import { getPropelAuthUrl, getSquadApiUrl } from "../config.js";
+import { getOAuthResource, getPropelAuthUrl } from "../config.js";
 import { AuthError } from "../errors.js";
 import {
+  getOAuthSession,
   getStoredClient,
-  type StoredTokens,
+  type OAuthSession,
   saveClient,
-  saveTokens,
+  saveOAuthSession,
 } from "./token-store.js";
+
+const SCOPE = "read:workspace write:workspace openid email";
 
 function base64url(buffer: Buffer): string {
   return buffer
@@ -29,52 +32,42 @@ function generateCodeChallenge(verifier: string): string {
 
 interface TokenResponse {
   access_token: string;
-  refresh_token: string;
+  refresh_token?: string;
   expires_in: number;
   token_type: string;
 }
 
-interface JwtExchangeResponse {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
+function toSession(data: TokenResponse): OAuthSession {
+  return {
+    accessToken: data.access_token,
+    refreshToken: data.refresh_token,
+    expiresAt: Math.floor(Date.now() / 1000) + data.expires_in,
+  };
 }
 
-async function exchangeOpaqueForJwt(
-  apiUrl: string,
-  opaqueToken: string,
-): Promise<JwtExchangeResponse> {
-  const response = await fetch(`${apiUrl}/v1/auth/token`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${opaqueToken}`,
-    },
-  });
-
-  if (!response.ok) {
-    const body = await response.text();
-    throw new AuthError(
-      `JWT exchange failed (HTTP ${response.status}): ${body}`,
-    );
-  }
-
-  return response.json() as Promise<JwtExchangeResponse>;
-}
-
-async function ensureClientRegistered(env: Environment): Promise<string> {
-  const stored = getStoredClient(env);
-  if (stored) return stored.clientId;
-
+/**
+ * Register the CLI as a public OAuth client via dynamic client registration
+ * (RFC 7591) for the exact loopback redirect URI we will use. PropelAuth
+ * validates the redirect URI strictly, so the registered URI must match the
+ * one sent on the authorize request (port included) — we therefore register
+ * per login once the loopback port is known. The client id is persisted for
+ * later refreshes.
+ */
+async function registerPublicClient(
+  env: Environment,
+  redirectUri: string,
+): Promise<string> {
   const authUrl = getPropelAuthUrl(env);
   const response = await fetch(`${authUrl}/oauth/2.1/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       client_name: "Squad CLI",
-      redirect_uris: ["http://localhost/callback"],
+      redirect_uris: [redirectUri],
       grant_types: ["authorization_code", "refresh_token"],
       response_types: ["code"],
       token_endpoint_auth_method: "none",
+      scope: SCOPE,
     }),
   });
 
@@ -90,91 +83,76 @@ async function ensureClientRegistered(env: Environment): Promise<string> {
   return data.client_id;
 }
 
-async function exchangeCodeForTokens(
+async function requestToken(
   authUrl: string,
-  clientId: string,
-  code: string,
-  codeVerifier: string,
-  redirectUri: string,
+  params: Record<string, string>,
 ): Promise<TokenResponse> {
-  const tokenUrl = `${authUrl}/oauth/2.1/token`;
-  const response = await fetch(tokenUrl, {
+  const response = await fetch(`${authUrl}/oauth/2.1/token`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "authorization_code",
-      client_id: clientId,
-      code,
-      code_verifier: codeVerifier,
-      redirect_uri: redirectUri,
-    }),
+    body: new URLSearchParams(params),
   });
 
   if (!response.ok) {
     const body = await response.text();
     throw new AuthError(
-      `Token exchange failed (HTTP ${response.status}): ${body}`,
+      `Token request failed (HTTP ${response.status}): ${body}`,
     );
   }
 
   return response.json() as Promise<TokenResponse>;
 }
 
-export async function refreshAccessToken(
+/**
+ * Refresh the opaque OAuth session using its refresh token. Throws when no
+ * refresh token or client is available, prompting re-login.
+ */
+export async function refreshOAuthSession(
   env: Environment,
-  refreshToken: string,
-): Promise<StoredTokens> {
-  const authUrl = getPropelAuthUrl(env);
-  const clientId = await ensureClientRegistered(env);
-  const tokenUrl = `${authUrl}/oauth/2.1/token`;
-
-  const response = await fetch(tokenUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "refresh_token",
-      client_id: clientId,
-      refresh_token: refreshToken,
-    }),
-  });
-
-  if (!response.ok) {
+): Promise<OAuthSession> {
+  const current = getOAuthSession(env);
+  const client = getStoredClient(env);
+  if (!current?.refreshToken || !client) {
     throw new AuthError("Session expired. Please run: squad auth login");
   }
 
-  const data = (await response.json()) as TokenResponse;
+  let data: TokenResponse;
+  try {
+    data = await requestToken(getPropelAuthUrl(env), {
+      grant_type: "refresh_token",
+      client_id: client.clientId,
+      refresh_token: current.refreshToken,
+    });
+  } catch {
+    throw new AuthError("Session expired. Please run: squad auth login");
+  }
 
-  const apiUrl = getSquadApiUrl(env);
-  const jwt = await exchangeOpaqueForJwt(apiUrl, data.access_token);
-
-  const tokens: StoredTokens = {
-    accessToken: jwt.access_token,
-    refreshToken: data.refresh_token,
-    expiresAt: Math.floor(Date.now() / 1000) + jwt.expires_in,
-  };
-
-  saveTokens(env, tokens);
-  return tokens;
+  const session = toSession({
+    ...data,
+    refresh_token: data.refresh_token ?? current.refreshToken,
+  });
+  saveOAuthSession(env, session);
+  return session;
 }
 
 /**
- * Run the OAuth2 PKCE login flow:
- * 1. Register the CLI as a public OAuth client (if not already registered)
- * 2. Start a local HTTP server on a random port
- * 3. Open the browser to the authorization URL
- * 4. Wait for the callback with the authorization code
- * 5. Exchange the code for tokens (PKCE, no client secret)
- * 6. Store the tokens
+ * Run the OAuth2 PKCE login flow against PropelAuth: bind a loopback server,
+ * register a public client for that exact redirect URI, open the browser to
+ * the authorization URL, exchange the returned code for tokens, and store the
+ * opaque OAuth session. The service JWT used for API calls is minted later
+ * from this session by the token-exchange endpoint.
  */
-export async function login(env: Environment): Promise<StoredTokens> {
+export async function login(env: Environment): Promise<OAuthSession> {
   const authUrl = getPropelAuthUrl(env);
-  const clientId = await ensureClientRegistered(env);
   const codeVerifier = generateCodeVerifier();
   const codeChallenge = generateCodeChallenge(codeVerifier);
   const state = base64url(crypto.randomBytes(16));
 
-  return new Promise((resolve, reject) => {
+  return new Promise<OAuthSession>((resolve, reject) => {
     let timeout: NodeJS.Timeout;
+    let clientId = "";
+    let redirectUri = "";
+
     const server = http.createServer(async (req, res) => {
       try {
         const url = new URL(req.url ?? "/", "http://localhost");
@@ -205,7 +183,6 @@ export async function login(env: Environment): Promise<StoredTokens> {
 
         const code = url.searchParams.get("code");
         const returnedState = url.searchParams.get("state");
-
         if (!code || returnedState !== state) {
           res.writeHead(400, { "Content-Type": "text/html" });
           res.end("<html><body><h1>Invalid callback</h1></body></html>");
@@ -215,26 +192,16 @@ export async function login(env: Environment): Promise<StoredTokens> {
           return;
         }
 
-        const port = (server.address() as { port: number }).port;
-        const redirectUri = `http://localhost:${port}/callback`;
-        const data = await exchangeCodeForTokens(
-          authUrl,
-          clientId,
+        const data = await requestToken(authUrl, {
+          grant_type: "authorization_code",
+          client_id: clientId,
           code,
-          codeVerifier,
-          redirectUri,
-        );
+          code_verifier: codeVerifier,
+          redirect_uri: redirectUri,
+        });
 
-        const apiUrl = getSquadApiUrl(env);
-        const jwt = await exchangeOpaqueForJwt(apiUrl, data.access_token);
-
-        const tokens: StoredTokens = {
-          accessToken: jwt.access_token,
-          refreshToken: data.refresh_token,
-          expiresAt: Math.floor(Date.now() / 1000) + jwt.expires_in,
-        };
-
-        saveTokens(env, tokens);
+        const session = toSession(data);
+        saveOAuthSession(env, session);
 
         res.writeHead(200, { "Content-Type": "text/html" });
         res.end(
@@ -242,7 +209,7 @@ export async function login(env: Environment): Promise<StoredTokens> {
         );
         clearTimeout(timeout);
         server.close();
-        resolve(tokens);
+        resolve(session);
       } catch (err) {
         clearTimeout(timeout);
         server.close();
@@ -251,51 +218,47 @@ export async function login(env: Environment): Promise<StoredTokens> {
     });
 
     server.listen(0, "127.0.0.1", async () => {
-      const port = (server.address() as { port: number }).port;
-      const redirectUri = `http://localhost:${port}/callback`;
-
-      const authorizeUrl = new URL(`${authUrl}/oauth/2.1/authorize`);
-      authorizeUrl.searchParams.set("response_type", "code");
-      authorizeUrl.searchParams.set("client_id", clientId);
-      authorizeUrl.searchParams.set("redirect_uri", redirectUri);
-      authorizeUrl.searchParams.set("code_challenge", codeChallenge);
-      authorizeUrl.searchParams.set("code_challenge_method", "S256");
-      authorizeUrl.searchParams.set("state", state);
-      authorizeUrl.searchParams.set("resource", getSquadApiUrl(env));
-
       try {
-        const open = (await import("open")).default;
-        await open(authorizeUrl.toString());
-        console.error(
-          JSON.stringify(
-            {
-              status: "waiting",
-              message: "Opening browser for login",
-              url: authorizeUrl.toString(),
-            },
-            null,
-            2,
-          ),
-        );
-      } catch {
-        console.error(
-          JSON.stringify(
-            {
-              status: "waiting",
-              message: "Open this URL in your browser to log in",
-              url: authorizeUrl.toString(),
-            },
-            null,
-            2,
-          ),
-        );
+        const port = (server.address() as { port: number }).port;
+        redirectUri = `http://localhost:${port}/callback`;
+        clientId = await registerPublicClient(env, redirectUri);
+
+        const authorizeUrl = new URL(`${authUrl}/oauth/2.1/authorize`);
+        authorizeUrl.searchParams.set("response_type", "code");
+        authorizeUrl.searchParams.set("client_id", clientId);
+        authorizeUrl.searchParams.set("redirect_uri", redirectUri);
+        authorizeUrl.searchParams.set("code_challenge", codeChallenge);
+        authorizeUrl.searchParams.set("code_challenge_method", "S256");
+        authorizeUrl.searchParams.set("state", state);
+        authorizeUrl.searchParams.set("scope", SCOPE);
+        authorizeUrl.searchParams.set("resource", getOAuthResource(env));
+
+        const waiting = (message: string) =>
+          console.error(
+            JSON.stringify(
+              { status: "waiting", message, url: authorizeUrl.toString() },
+              null,
+              2,
+            ),
+          );
+
+        try {
+          const open = (await import("open")).default;
+          await open(authorizeUrl.toString());
+          waiting("Opening browser for login");
+        } catch {
+          waiting("Open this URL in your browser to log in");
+        }
+      } catch (err) {
+        clearTimeout(timeout);
+        server.close();
+        reject(err);
       }
     });
 
-    // Timeout after 2 minutes
     timeout = setTimeout(() => {
       server.close();
-      reject(new AuthError("Login timed out after 2 minutes"));
-    }, 120_000);
+      reject(new AuthError("Login timed out after 5 minutes"));
+    }, 300_000);
   });
 }
