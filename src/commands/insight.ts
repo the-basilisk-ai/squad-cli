@@ -1,121 +1,180 @@
 import type { Command } from "commander";
 import { getGlobalOptions } from "../cli.js";
-import { squadClient } from "../lib/clients/squad.js";
+import {
+  CliGetGoalDocument,
+  CliGetInsightDocument,
+  CliGoalInsightsDocument,
+  CliInsightListDocument,
+  CliLinkEntitiesDocument,
+  CliUnlinkEntitiesDocument,
+  CliUpdateInsightMetaDocument,
+} from "../gql/graphql.js";
+import type { CommandContext } from "../lib/context.js";
 import { resolveContext } from "../lib/context.js";
+import { formatDisplayId } from "../lib/display-id.js";
 import { handleError } from "../lib/errors.js";
-import { output, outputJson } from "../lib/output.js";
+import { execute } from "../lib/graphql/execute.js";
+import {
+  clampLimit,
+  omitUndefined,
+  output,
+  outputJson,
+  parseOffset,
+} from "../lib/output.js";
+
+async function resolveGoalUuid(
+  goalId: string,
+  ctx: CommandContext,
+): Promise<string> {
+  const data = await execute(CliGetGoalDocument, { id: goalId }, ctx);
+  if (!data.goal?.id) throw new Error(`Goal "${goalId}" not found.`);
+  return data.goal.id;
+}
 
 export function registerInsightCommands(program: Command) {
-  const insight = program.command("insight").description("Manage insights");
+  const insight = program
+    .command("insight")
+    .description("Browse and curate insights");
 
   insight
     .command("list")
-    .description("List all insights")
-    .action(async function (this: Command) {
-      try {
-        const opts = getGlobalOptions(this);
-        const ctx = await resolveContext(opts.env, opts.token);
-        const client = squadClient(ctx.token, opts.env);
-
-        const result = await client.listInsights({
-          orgId: ctx.orgId,
-          workspaceId: ctx.workspaceId,
-        });
-
-        const items = result.data.map(i => ({
-          id: i.id,
-          title: i.title,
-          type: i.type,
-          createdAt: i.createdAt,
-          updatedAt: i.updatedAt,
-        }));
-
-        output(items, opts.format, ["id", "title", "type"]);
-      } catch (error) {
-        await handleError(error);
-      }
-    });
-
-  insight
-    .command("get")
-    .description("Get insight details")
-    .argument("<id>", "Insight ID")
-    .action(async function (this: Command, id: string) {
-      try {
-        const opts = getGlobalOptions(this);
-        const ctx = await resolveContext(opts.env, opts.token);
-        const client = squadClient(ctx.token, opts.env);
-
-        const response = await client.getInsightRaw({
-          orgId: ctx.orgId,
-          workspaceId: ctx.workspaceId,
-          insightId: id,
-        });
-
-        const result = await response.raw.json();
-        outputJson(result);
-      } catch (error) {
-        await handleError(error);
-      }
-    });
-
-  insight
-    .command("create")
-    .description("Create an insight")
-    .requiredOption("--title <title>", "Insight title")
-    .requiredOption("--description <description>", "Description of the insight")
-    .requiredOption(
-      "--type <type>",
-      "Insight type (Feedback, Bug, FeatureRequest)",
+    .description("Browse distilled insights ranked by combined score")
+    .option(
+      "--goal <goalId>",
+      "Scope to insights supporting a goal (GL-N or UUID)",
     )
+    .option("--category <category>", "Filter by category")
+    .option("--min-score <n>", "Minimum combined score")
+    .option("--status <status>", "Filter by status")
+    .option("--limit <n>", "Max results (default 25, max 100)")
+    .option("--offset <n>", "Pagination offset")
     .action(async function (this: Command) {
       try {
         const opts = getGlobalOptions(this);
-        const localOpts = this.opts();
+        const o = this.opts();
         const ctx = await resolveContext(opts.env, opts.token);
-        const client = squadClient(ctx.token, opts.env);
 
-        const result = await client.createInsight({
-          orgId: ctx.orgId,
-          workspaceId: ctx.workspaceId,
-          createInsightRequest: {
-            title: localOpts.title,
-            description: localOpts.description,
-            type: localOpts.type,
-            organisationId: ctx.orgId,
-            workspaceId: ctx.workspaceId,
-          },
+        const rows = o.goal
+          ? ((await execute(CliGoalInsightsDocument, { goalId: o.goal }, ctx))
+              .goal?.insights ?? [])
+          : ((
+              await execute(
+                CliInsightListDocument,
+                {
+                  limit: clampLimit(o.limit),
+                  offset: parseOffset(o.offset),
+                  category: o.category,
+                  minCombinedScore:
+                    o.minScore != null ? Number(o.minScore) : undefined,
+                  status: o.status,
+                },
+                ctx,
+              )
+            ).insightList ?? []);
+
+        output(
+          rows.map(i => ({
+            displayId: formatDisplayId("insight", i.displayId) ?? i.id,
+            title: i.title,
+            category: i.category,
+            status: "status" in i ? i.status : undefined,
+            combinedScore: i.combinedScore,
+          })),
+          opts.format,
+          ["displayId", "title", "category", "combinedScore"],
+        );
+      } catch (error) {
+        handleError(error);
+      }
+    });
+
+  insight
+    .command("update")
+    .description(
+      "Curate an insight: set category/status and link or unlink its supported goal",
+    )
+    .argument("<insightId>", "Insight display ID (IN-N) or UUID")
+    .option("--category <category>", "Set the category")
+    .option("--status <status>", "Set the status")
+    .option("--link-goal <goalId>", "Link to a goal (GL-N or UUID)")
+    .option("--unlink-goal <goalId>", "Unlink from a goal (GL-N or UUID)")
+    .action(async function (this: Command, insightId: string) {
+      try {
+        const opts = getGlobalOptions(this);
+        const o = this.opts();
+        if (!o.category && !o.status && !o.linkGoal && !o.unlinkGoal) {
+          throw new Error(
+            "Provide at least one of --category, --status, --link-goal, --unlink-goal",
+          );
+        }
+        const ctx = await resolveContext(opts.env, opts.token);
+
+        const found = await execute(
+          CliGetInsightDocument,
+          { id: insightId, withEvidence: false },
+          ctx,
+        );
+        const insightUuid = found.insight?.id;
+        if (!insightUuid) throw new Error(`Insight "${insightId}" not found.`);
+
+        const changes: string[] = [];
+        if (o.category || o.status) {
+          await execute(
+            CliUpdateInsightMetaDocument,
+            {
+              id: insightUuid,
+              input: omitUndefined({ category: o.category, status: o.status }),
+            },
+            ctx,
+          );
+          changes.push("metadata updated");
+        }
+
+        const edge = (goalUuid: string) => ({
+          sourceType: "Insight" as const,
+          sourceId: insightUuid,
+          targetType: "Goal" as const,
+          targetId: goalUuid,
+          edgeLabel: "SUPPORTS_GOAL" as const,
         });
+
+        if (o.linkGoal) {
+          const goalUuid = await resolveGoalUuid(o.linkGoal, ctx);
+          const res = await execute(
+            CliLinkEntitiesDocument,
+            { input: edge(goalUuid) },
+            ctx,
+          );
+          if (!res.linkEntities?.success) {
+            throw new Error(
+              `Goal link failed: ${res.linkEntities?.error ?? "unknown error"}`,
+            );
+          }
+          changes.push("goal linked");
+        }
+        if (o.unlinkGoal) {
+          const goalUuid = await resolveGoalUuid(o.unlinkGoal, ctx);
+          const res = await execute(
+            CliUnlinkEntitiesDocument,
+            { input: edge(goalUuid) },
+            ctx,
+          );
+          if (!res.unlinkEntities?.success) {
+            throw new Error(
+              `Goal unlink failed: ${res.unlinkEntities?.error ?? "unknown error"}`,
+            );
+          }
+          changes.push("goal unlinked");
+        }
 
         outputJson({
-          id: result.data.id,
-          title: result.data.title,
-          message: "Insight created",
+          message: "Insight updated",
+          displayId:
+            formatDisplayId("insight", found.insight?.displayId) ?? insightId,
+          changes,
         });
       } catch (error) {
-        await handleError(error);
-      }
-    });
-
-  insight
-    .command("delete")
-    .description("Delete an insight")
-    .argument("<id>", "Insight ID")
-    .action(async function (this: Command, id: string) {
-      try {
-        const opts = getGlobalOptions(this);
-        const ctx = await resolveContext(opts.env, opts.token);
-        const client = squadClient(ctx.token, opts.env);
-
-        await client.deleteInsight({
-          orgId: ctx.orgId,
-          workspaceId: ctx.workspaceId,
-          insightId: id,
-        });
-
-        outputJson({ id, message: "Insight deleted" });
-      } catch (error) {
-        await handleError(error);
+        handleError(error);
       }
     });
 }

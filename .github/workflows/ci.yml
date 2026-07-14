@@ -23,5 +23,8 @@ jobs:
 
       - run: yarn install --frozen-lockfile
       - run: yarn format
+      - run: yarn codegen:check
       - run: yarn knip
+      - run: yarn typecheck
+      - run: yarn test
       - run: yarn build

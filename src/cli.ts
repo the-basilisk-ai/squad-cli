@@ -1,14 +1,18 @@
 import { readFileSync } from "node:fs";
 import { Command, Option } from "commander";
+import { registerActionCommands } from "./commands/action.js";
+import { registerActivityCommands } from "./commands/activity.js";
 import { registerAuthCommands } from "./commands/auth.js";
-import { registerFeedbackCommands } from "./commands/feedback.js";
+import { registerBriefCommands } from "./commands/brief.js";
+import { registerClusterCommands } from "./commands/cluster.js";
+import { registerDocumentCommands } from "./commands/document.js";
+import { registerGetCommand } from "./commands/get.js";
 import { registerGoalCommands } from "./commands/goal.js";
 import { registerInsightCommands } from "./commands/insight.js";
-import { registerKnowledgeCommands } from "./commands/knowledge.js";
-import { registerOpportunityCommands } from "./commands/opportunity.js";
+import { registerIntegrationCommands } from "./commands/integration.js";
+import { registerResearchCommands } from "./commands/research.js";
 import { registerSearchCommands } from "./commands/search.js";
-import { registerSolutionCommands } from "./commands/solution.js";
-import { registerViewCommands } from "./commands/view.js";
+import { registerSignalCommands } from "./commands/signal.js";
 import { registerWorkspaceCommands } from "./commands/workspace.js";
 import type { Environment } from "./lib/config.js";
 import { handleError } from "./lib/errors.js";
@@ -23,26 +27,30 @@ const program = new Command();
 
 program
   .name("squad")
-  .description("Squad AI CLI - Product strategy management")
+  .description("Squad AI CLI - Product strategy for AI agents and humans")
   .version(version)
   .option("--format <format>", "Output format (json, table)", "json")
   .addOption(
     new Option("--env <env>", "Environment")
-      .choices(["dev", "staging", "production"])
+      .choices(["dev", "production"])
       .default("production"),
   )
-  .option("--token <token>", "API access token (overrides stored auth)");
+  .option("--token <token>", "Service JWT (overrides stored auth)");
 
 registerAuthCommands(program);
 registerWorkspaceCommands(program);
-registerOpportunityCommands(program);
-registerSolutionCommands(program);
-registerGoalCommands(program);
-registerKnowledgeCommands(program);
-registerFeedbackCommands(program);
+registerSignalCommands(program);
+registerClusterCommands(program);
 registerInsightCommands(program);
+registerActionCommands(program);
+registerGoalCommands(program);
+registerResearchCommands(program);
+registerDocumentCommands(program);
+registerBriefCommands(program);
+registerIntegrationCommands(program);
+registerActivityCommands(program);
 registerSearchCommands(program);
-registerViewCommands(program);
+registerGetCommand(program);
 
 export interface GlobalOptions {
   format: string;

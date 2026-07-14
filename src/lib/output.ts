@@ -1,3 +1,20 @@
+const DEFAULT_LIMIT = 25;
+const MAX_LIMIT = 100;
+
+/** Clamp a user-supplied --limit to [1, 100], defaulting to 25. */
+export function clampLimit(value?: string | number): number {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n < 1) return DEFAULT_LIMIT;
+  return Math.min(Math.floor(n), MAX_LIMIT);
+}
+
+/** Parse a --offset into a non-negative integer (default 0). */
+export function parseOffset(value?: string | number): number {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n < 0) return 0;
+  return Math.floor(n);
+}
+
 /** Strip undefined values so PATCH payloads only include fields the user set. */
 export function omitUndefined<T extends Record<string, unknown>>(
   obj: T,

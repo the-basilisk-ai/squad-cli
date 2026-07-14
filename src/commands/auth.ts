@@ -2,11 +2,14 @@ import type { Command } from "commander";
 import { getGlobalOptions } from "../cli.js";
 import { login } from "../lib/auth/oauth.js";
 import {
-  clearTokens,
-  getTokens,
-  isTokenExpired,
+  clearAuth,
+  getOAuthSession,
+  isExpired,
 } from "../lib/auth/token-store.js";
-import { clearWorkspaceSelection } from "../lib/context.js";
+import {
+  autoSelectWorkspace,
+  clearWorkspaceSelection,
+} from "../lib/context.js";
 import { handleError } from "../lib/errors.js";
 import { outputJson } from "../lib/output.js";
 
@@ -20,9 +23,33 @@ export function registerAuthCommands(program: Command) {
       try {
         const { env } = getGlobalOptions(this);
         await login(env);
-        outputJson({ message: "Login successful", env });
+
+        const result = await autoSelectWorkspace(env);
+        if (result.selected) {
+          outputJson({
+            message: "Login successful",
+            env,
+            workspace: {
+              orgId: result.selected.orgId,
+              workspaceId: result.selected.workspaceId,
+            },
+          });
+          return;
+        }
+
+        outputJson({
+          message: "Login successful. Select a workspace to continue.",
+          env,
+          next: "squad workspace select <orgId> <workspaceId>",
+          available: result.directory.workspaces.map(ws => ({
+            orgId: ws.orgId,
+            orgName: ws.orgName,
+            workspaceId: ws.id,
+            workspaceName: ws.name,
+          })),
+        });
       } catch (error) {
-        await handleError(error);
+        handleError(error);
       }
     });
 
@@ -32,11 +59,11 @@ export function registerAuthCommands(program: Command) {
     .action(async function (this: Command) {
       try {
         const { env } = getGlobalOptions(this);
-        clearTokens(env);
+        clearAuth(env);
         clearWorkspaceSelection(env);
         outputJson({ message: "Logged out", env });
       } catch (error) {
-        await handleError(error);
+        handleError(error);
       }
     });
 
@@ -46,21 +73,19 @@ export function registerAuthCommands(program: Command) {
     .action(async function (this: Command) {
       try {
         const { env } = getGlobalOptions(this);
-        const tokens = getTokens(env);
-
-        if (!tokens) {
+        const session = getOAuthSession(env);
+        if (!session) {
           outputJson({ authenticated: false, env });
           return;
         }
-
         outputJson({
           authenticated: true,
           env,
-          expired: isTokenExpired(tokens),
-          expiresAt: new Date(tokens.expiresAt * 1000).toISOString(),
+          sessionExpired: isExpired(session.expiresAt),
+          expiresAt: new Date(session.expiresAt * 1000).toISOString(),
         });
       } catch (error) {
-        await handleError(error);
+        handleError(error);
       }
     });
 }

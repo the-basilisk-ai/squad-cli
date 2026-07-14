@@ -1,0 +1,23 @@
+query CliWorkspaceDirectory {
+  organisations {
+    id
+    name
+    slug
+    propelAuthOrgId
+  }
+  workspaces(limit: 100) {
+    id
+    name
+    slug
+    organisationId
+    isDefault
+  }
+}
+
+query CliOrgMemberList {
+  orgMemberList {
+    userId
+    displayName
+    email
+  }
+}
