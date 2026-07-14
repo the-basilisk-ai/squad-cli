@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { exchangeToken } from "./exchange.js";
+import { exchangeToken, fetchAccessibleOrgs } from "./exchange.js";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -58,6 +58,40 @@ describe("exchangeToken", () => {
     stubFetch(403, { error: "Organisation not accessible" });
     await expect(exchangeToken("dev", "opaque", "org_x")).rejects.toThrow(
       "Organisation not accessible",
+    );
+  });
+});
+
+describe("fetchAccessibleOrgs", () => {
+  it("returns the accessible orgs", async () => {
+    stubFetch(200, {
+      orgs: [
+        { id: "org_1", name: "Org One", slug: "org-one" },
+        { id: "org_2", name: "Org Two", slug: "org-two" },
+      ],
+    });
+    const orgs = await fetchAccessibleOrgs("dev", "opaque");
+    expect(orgs).toEqual([
+      { id: "org_1", name: "Org One", slug: "org-one" },
+      { id: "org_2", name: "Org Two", slug: "org-two" },
+    ]);
+  });
+
+  it("GETs the orgs endpoint with the bearer token", async () => {
+    const fetchMock = stubFetch(200, { orgs: [] });
+    await fetchAccessibleOrgs("dev", "opaque");
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toMatch(/\/api\/v1\/auth\/orgs$/);
+    expect(new Headers(init?.headers).get("authorization")).toBe(
+      "Bearer opaque",
+    );
+  });
+
+  it("throws an AuthError carrying the server error message", async () => {
+    stubFetch(401, { error: "Invalid or inactive access token" });
+    await expect(fetchAccessibleOrgs("dev", "opaque")).rejects.toThrow(
+      "Invalid or inactive access token",
     );
   });
 });
