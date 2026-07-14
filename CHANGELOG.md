@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.4.0](https://github.com/the-basilisk-ai/squad-cli/compare/cli-v0.3.4...cli-v0.4.0) (2026-07-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* This release targets the new Squad platform (v2) and is not compatible with the legacy Squad v1 platform. All endpoints and authentication now point at the v2 API and its PropelAuth project. The OST commands opportunity, solution and view are removed; feedback is replaced by signal and knowledge by document. If your workspace is still on Squad v1, remain on the previous CLI release (install @squadai/cli@0.3.x).
+
+### Features
+
+* rebuild CLI on the new Squad platform (v2) ([#59](https://github.com/the-basilisk-ai/squad-cli/issues/59)) ([3d4db3f](https://github.com/the-basilisk-ai/squad-cli/commit/3d4db3f4a5d32e593812d16476ebd1eb24d17fe5))
+
+
+### Bug Fixes
+
+* **cli:** report version from package.json ([#58](https://github.com/the-basilisk-ai/squad-cli/issues/58)) ([0d889ec](https://github.com/the-basilisk-ai/squad-cli/commit/0d889ec4b148cf56e11dcf6abd342e9d8129a2b2))
+
 ## [0.3.4](https://github.com/the-basilisk-ai/squad-cli/compare/cli-v0.3.3...cli-v0.3.4) (2026-07-13)
 
 
