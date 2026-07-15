@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/the-basilisk-ai/squad-cli/compare/cli-v0.4.0...cli-v0.4.1) (2026-07-15)
+
+
+### Bug Fixes
+
+* **auth:** support login and workspace listing for multi-org users ([#61](https://github.com/the-basilisk-ai/squad-cli/issues/61)) ([f1fb748](https://github.com/the-basilisk-ai/squad-cli/commit/f1fb74856ae079a55e6de1da2c9a0c6c98d7cd38))
+
 ## [0.4.0](https://github.com/the-basilisk-ai/squad-cli/compare/cli-v0.3.4...cli-v0.4.0) (2026-07-14)
 
 
