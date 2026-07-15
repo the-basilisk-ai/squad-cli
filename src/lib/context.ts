@@ -2,7 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { CliWorkspaceDirectoryDocument } from "../gql/graphql.js";
-import { exchangeToken } from "./auth/exchange.js";
+import { exchangeToken, fetchAccessibleOrgs } from "./auth/exchange.js";
 import { refreshOAuthSession } from "./auth/oauth.js";
 import {
   getCachedJwt,
@@ -115,18 +115,14 @@ async function resolveOpaqueToken(env: Environment): Promise<string> {
 /**
  * Resolve a minted service JWT for an org, reusing the cached one until it is
  * about to expire, otherwise exchanging the opaque token for a fresh JWT.
- * Passing no org mints against the user's default/only org (used to bootstrap
- * the workspace directory before a selection exists).
  */
 async function resolveJwt(
   env: Environment,
-  orgId?: string,
+  orgId: string,
 ): Promise<{ token: string; activeOrgId: string }> {
-  if (orgId) {
-    const cached = getCachedJwt(env, orgId);
-    if (cached && !isExpired(cached.expiresAt)) {
-      return { token: cached.token, activeOrgId: orgId };
-    }
+  const cached = getCachedJwt(env, orgId);
+  if (cached && !isExpired(cached.expiresAt)) {
+    return { token: cached.token, activeOrgId: orgId };
   }
 
   const opaque = await resolveOpaqueToken(env);
@@ -171,15 +167,24 @@ export async function resolveContext(
 /* ── Workspace directory ───────────────────────────────────────────── */
 
 /**
- * Fetch every org and workspace the user can access in one query. The
- * workspaces query spans all accessible orgs, so a JWT minted for any one org
- * is sufficient.
+ * Fetch the orgs and workspaces the user can access. The v2 GraphQL API is
+ * cross-org — any minted JWT reads every org and workspace the user can
+ * access — but the token exchange needs an org to mint against. So resolve a
+ * bootstrap org (the given one, else the first accessible org from the auth
+ * layer), mint one JWT, and read the whole directory in a single query.
  */
 export async function fetchWorkspaceDirectory(
   env: Environment,
   orgId?: string,
 ): Promise<WorkspaceDirectory> {
-  const { token } = await resolveJwt(env, orgId);
+  const bootstrapOrgId =
+    orgId ??
+    (await fetchAccessibleOrgs(env, await resolveOpaqueToken(env)))[0]?.id;
+  if (!bootstrapOrgId) {
+    return { orgs: [], workspaces: [] };
+  }
+
+  const { token } = await resolveJwt(env, bootstrapOrgId);
   const data = await execute(
     CliWorkspaceDirectoryDocument,
     {},

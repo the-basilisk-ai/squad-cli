@@ -24,7 +24,22 @@ export function registerAuthCommands(program: Command) {
         const { env } = getGlobalOptions(this);
         await login(env);
 
-        const result = await autoSelectWorkspace(env);
+        // Authentication succeeded and the session is persisted. Picking a
+        // workspace is a separate, best-effort step — never fail login if it
+        // can't complete (e.g. a transient directory error).
+        let result: Awaited<ReturnType<typeof autoSelectWorkspace>>;
+        try {
+          result = await autoSelectWorkspace(env);
+        } catch {
+          outputJson({
+            message:
+              "Login successful. Run 'squad workspace list' to choose a workspace.",
+            env,
+            next: "squad workspace list",
+          });
+          return;
+        }
+
         if (result.selected) {
           outputJson({
             message: "Login successful",

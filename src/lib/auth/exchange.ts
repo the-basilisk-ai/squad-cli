@@ -54,3 +54,43 @@ export async function exchangeToken(
     activeOrgId: body.active_org_id,
   };
 }
+
+/** An organisation the logged-in user can access. */
+export interface AccessibleOrg {
+  /** PropelAuth org ID — passed back to mint a JWT scoped to this org. */
+  id: string;
+  name: string;
+  slug: string;
+}
+
+interface OrgsResponse {
+  orgs?: AccessibleOrg[];
+  error?: string;
+}
+
+/**
+ * List the organisations the opaque OAuth token holder can access. The v2
+ * GraphQL API is org-scoped, so this cross-org list comes from the auth layer
+ * rather than GraphQL — it lets a multi-org user pick an org before any JWT is
+ * minted.
+ */
+export async function fetchAccessibleOrgs(
+  env: Environment,
+  opaqueToken: string,
+): Promise<AccessibleOrg[]> {
+  const response = await fetch(`${getSquadApiUrl(env)}/api/v1/auth/orgs`, {
+    headers: { authorization: `Bearer ${opaqueToken}` },
+  });
+
+  const body = (await response.json().catch(() => undefined)) as
+    | OrgsResponse
+    | undefined;
+
+  if (!response.ok || !body?.orgs) {
+    throw new AuthError(
+      body?.error ?? `Failed to list organisations (HTTP ${response.status})`,
+    );
+  }
+
+  return body.orgs;
+}

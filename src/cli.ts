@@ -30,10 +30,14 @@ program
   .description("Squad AI CLI - Product strategy for AI agents and humans")
   .version(version)
   .option("--format <format>", "Output format (json, table)", "json")
+  // Internal-only: point the CLI at dev. Hidden from --help; production users
+  // never need it. Kept as an explicit per-invocation flag rather than an env
+  // var so it can't linger in a shell and silently target the wrong platform.
   .addOption(
-    new Option("--env <env>", "Environment")
+    new Option("--env <env>", "Environment (internal)")
       .choices(["dev", "production"])
-      .default("production"),
+      .default("production")
+      .hideHelp(),
   )
   .option("--token <token>", "Service JWT (overrides stored auth)");
 
