@@ -45,7 +45,7 @@
     "husky": "^9.1.7",
     "knip": "^6.4.1",
     "tsup": "^8.4.0",
-    "typescript": "^6.0.2",
+    "typescript": "^7.0.2",
     "vitest": "^4.1.9"
   },
   "resolutions": {
