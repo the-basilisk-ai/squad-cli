@@ -77,31 +77,31 @@ the GraphQL endpoint.
 ## Development
 
 ```bash
-yarn install
-yarn build        # Build to dist/cli.js (tsup)
-yarn dev          # Watch mode
-yarn typecheck    # tsc --noEmit
-yarn test         # vitest
+pnpm install
+pnpm build        # Build to dist/cli.js (tsup)
+pnpm dev          # Watch mode
+pnpm typecheck    # tsc --noEmit
+pnpm test         # vitest
 ```
 
 Lint and format:
 
 ```bash
-yarn format       # Check (Biome)
-yarn format:fix   # Auto-fix
-yarn knip         # Dead code detection (Knip)
+pnpm format       # Check (Biome)
+pnpm format:fix   # Auto-fix
+pnpm knip         # Dead code detection (Knip)
 ```
 
 The typed GraphQL client is generated from `schema.graphql` (a committed
 snapshot of the platform schema) and the operations in `src/graphql/**/*.graphql`:
 
 ```bash
-yarn codegen       # Regenerate src/gql/
-yarn codegen:check # Fail if src/gql/ is stale (run in CI)
+pnpm codegen       # Regenerate src/gql/
+pnpm codegen:check # Fail if src/gql/ is stale (run in CI)
 ```
 
 Refresh `schema.graphql` from the platform API, or point `SQUAD_GRAPHQL_URL` at a
-live endpoint, then rerun `yarn codegen`.
+live endpoint, then rerun `pnpm codegen`.
 
 ### Smoke test
 

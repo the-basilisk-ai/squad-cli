@@ -1,2 +1,2 @@
-yarn format
-yarn knip
+pnpm format
+pnpm knip
