@@ -1,0 +1,16 @@
+# Pin transitive versions (migrated from Yarn `resolutions`). As of pnpm 10.32
+# the `pnpm` field in package.json is ignored, so overrides live here.
+overrides:
+  knip>picomatch: 4.0.4
+  tinyglobby>picomatch: 4.0.4
+  esbuild: 0.28.1
+
+# Wait 7 days before resolving a newly published version, so a compromised
+# fresh release can't be pulled in before it's caught. Only affects resolving
+# new versions; frozen-lockfile installs are unaffected.
+minimumReleaseAge: 10080
+# Reject transitive dependencies resolved from non-registry (git/tarball/etc.)
+# sources, and block updates that would downgrade these security settings.
+# Require pnpm >=10.26 / >=10.21 respectively — older pnpm silently ignores them.
+blockExoticSubdeps: true
+trustPolicy: no-downgrade
