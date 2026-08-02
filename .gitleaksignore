@@ -1,0 +1,16 @@
+# gitleaks allowlist. One fingerprint per line, in the form
+# <commit>:<file>:<rule-id>:<line> as printed by the Secret Scan job summary.
+#
+# Convention: every entry carries a comment above it stating who confirmed it is
+# a false positive, on what date, and why the value is not a credential. An entry
+# without a justification is not a valid entry and should be rejected in review.
+#
+# A fingerprint pins one rule to one line of one commit, so an entry cannot hide
+# a different finding. Do not add path or regex allowlists to suppress noise in
+# bulk. If a real secret is found, the answer is rotation, not an entry here.
+# See docs/security/secret-scanning.md.
+#
+# Example:
+#   # steven 2026-08-02: sample response body in a test fixture, the token field
+#   # is a hand-written placeholder and authenticates to nothing.
+#   1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b:src/__fixtures__/response.json:generic-api-key:12
