@@ -2,12 +2,12 @@ import type { Command } from "commander";
 import { getGlobalOptions } from "../cli.js";
 import {
   CliGetActionDocument,
+  CliGetBriefDocument,
   CliGetClusterDocument,
   CliGetDocumentMarkdownDocument,
   CliGetDocumentMetaDocument,
   CliGetGoalDocument,
   CliGetInsightDocument,
-  CliGetOnePagerDocument,
   CliGetSignalDocument,
   CliResearchQuestionListDocument,
 } from "../gql/graphql.js";
@@ -44,9 +44,8 @@ async function fetchByType(
       return (await execute(CliGetGoalDocument, { id }, ctx)).goal;
     case "cluster":
       return (await execute(CliGetClusterDocument, { id }, ctx)).cluster;
-    case "one_pager":
-      return (await execute(CliGetOnePagerDocument, { displayId: id }, ctx))
-        .onePager;
+    case "brief":
+      return (await execute(CliGetBriefDocument, { displayId: id }, ctx)).brief;
     case "document": {
       const meta = (await execute(CliGetDocumentMetaDocument, { id }, ctx))
         .document;

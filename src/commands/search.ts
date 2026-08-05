@@ -77,7 +77,10 @@ export function registerSearchCommands(program: Command) {
           results.push({
             displayId: d.displayId ?? d.id,
             title: d.title,
-            type: d.kind === "one_pager" ? "one_pager" : "document",
+            type:
+              d.kind === "brief" || d.kind === "one_pager"
+                ? "brief"
+                : "document",
           });
         }
 

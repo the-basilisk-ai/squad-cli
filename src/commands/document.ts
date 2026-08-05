@@ -23,7 +23,10 @@ import {
 
 const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
 const docDisplayId = (kind?: string | null, displayId?: number | null) =>
-  formatDisplayId(kind === "one_pager" ? "one_pager" : "document", displayId);
+  formatDisplayId(
+    kind === "brief" || kind === "one_pager" ? "brief" : "document",
+    displayId,
+  );
 
 export function registerDocumentCommands(program: Command) {
   const document = program
@@ -54,7 +57,8 @@ export function registerDocumentCommands(program: Command) {
           docs.map(d => ({
             displayId: docDisplayId(d.kind, d.displayId) ?? d.id,
             title: d.title,
-            kind: d.kind,
+            kind:
+              d.kind === "brief" || d.kind === "one_pager" ? "brief" : d.kind,
             path: d.path,
             tags: (d.tags ?? []).join(","),
           })),

@@ -7,22 +7,18 @@ query CliDocumentList($limit: Int, $offset: Int) {
     path
     tags
     updatedAt
-    onePagerStatus
-    onePagerType
+    briefStatus
+    briefType
   }
 }
 
-query CliOnePagerList(
-  $filters: OnePagerListFilters
-  $limit: Int
-  $offset: Int
-) {
-  onePagerList(filters: $filters, limit: $limit, offset: $offset) {
+query CliBriefList($filters: BriefListFilters, $limit: Int, $offset: Int) {
+  briefList(filters: $filters, limit: $limit, offset: $offset) {
     id
     displayId
     title
-    onePagerStatus
-    onePagerType
+    briefStatus
+    briefType
     decisionRecommendation
     updatedAt
     sourceInsight {
@@ -70,41 +66,35 @@ mutation CliRemoveDocumentTag($id: String!, $tag: String!) {
   }
 }
 
-mutation CliGenerateOnePagerFromAction(
-  $actionId: String!
-  $type: OnePagerType
-) {
-  generateOnePagerFromAction(actionId: $actionId, type: $type) {
-    onePagerId
-    onePagerDisplayId
+mutation CliGenerateBriefFromAction($actionId: String!, $type: BriefType) {
+  generateBriefFromAction(actionId: $actionId, type: $type) {
+    briefId
+    briefDisplayId
   }
 }
 
-mutation CliGenerateOnePagerFromInsight(
-  $insightId: String!
-  $type: OnePagerType
-) {
-  generateOnePagerFromInsight(insightId: $insightId, type: $type) {
+mutation CliGenerateBriefFromInsight($insightId: String!, $type: BriefType) {
+  generateBriefFromInsight(insightId: $insightId, type: $type) {
     id
     displayId
     title
-    onePagerStatus
+    briefStatus
   }
 }
 
-mutation CliRetryOnePagerGeneration($onePagerId: String!) {
-  retryOnePagerGeneration(onePagerId: $onePagerId) {
+mutation CliRetryBriefGeneration($briefId: String!) {
+  retryBriefGeneration(briefId: $briefId) {
     id
     displayId
-    onePagerStatus
+    briefStatus
   }
 }
 
-mutation CliSetOnePagerStatus($onePagerId: String!, $status: OnePagerStatus!) {
-  setOnePagerStatus(onePagerId: $onePagerId, status: $status) {
+mutation CliSetBriefStatus($briefId: String!, $status: BriefStatus!) {
+  setBriefStatus(briefId: $briefId, status: $status) {
     id
     displayId
     title
-    onePagerStatus
+    briefStatus
   }
 }

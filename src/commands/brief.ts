@@ -1,13 +1,13 @@
 import type { Command } from "commander";
 import { getGlobalOptions } from "../cli.js";
 import {
-  CliGenerateOnePagerFromActionDocument,
-  CliGenerateOnePagerFromInsightDocument,
+  CliBriefListDocument,
+  CliGenerateBriefFromActionDocument,
+  CliGenerateBriefFromInsightDocument,
+  CliGetBriefDocument,
   CliGetInsightDocument,
-  CliGetOnePagerDocument,
-  CliOnePagerListDocument,
-  CliRetryOnePagerGenerationDocument,
-  CliSetOnePagerStatusDocument,
+  CliRetryBriefGenerationDocument,
+  CliSetBriefStatusDocument,
 } from "../gql/graphql.js";
 import { resolveContext } from "../lib/context.js";
 import { formatDisplayId } from "../lib/display-id.js";
@@ -15,18 +15,11 @@ import { handleError } from "../lib/errors.js";
 import { execute } from "../lib/graphql/execute.js";
 import { clampLimit, output, outputJson, parseOffset } from "../lib/output.js";
 
-type OnePagerStatus =
-  | "building"
-  | "draft"
-  | "in_review"
-  | "finalised"
-  | "failed";
-type OnePagerType = "decision" | "prd";
+type BriefStatus = "building" | "draft" | "in_review" | "finalised" | "failed";
+type BriefType = "decision" | "prd";
 
 export function registerBriefCommands(program: Command) {
-  const brief = program
-    .command("brief")
-    .description("Manage decision briefs (one-pagers)");
+  const brief = program.command("brief").description("Manage decision briefs");
 
   brief
     .command("list")
@@ -59,17 +52,15 @@ export function registerBriefCommands(program: Command) {
         }
 
         const statuses = o.status
-          ? (o.status
-              .split(",")
-              .map((s: string) => s.trim()) as OnePagerStatus[])
+          ? (o.status.split(",").map((s: string) => s.trim()) as BriefStatus[])
           : undefined;
 
         const data = await execute(
-          CliOnePagerListDocument,
+          CliBriefListDocument,
           {
             filters: {
-              onePagerStatus: statuses,
-              onePagerType: o.type as OnePagerType | undefined,
+              briefStatus: statuses,
+              briefType: o.type as BriefType | undefined,
               sourceInsightId,
             },
             limit: clampLimit(o.limit),
@@ -79,11 +70,11 @@ export function registerBriefCommands(program: Command) {
         );
 
         output(
-          (data.onePagerList ?? []).map(p => ({
-            displayId: formatDisplayId("one_pager", p.displayId) ?? p.id,
+          (data.briefList ?? []).map(p => ({
+            displayId: formatDisplayId("brief", p.displayId) ?? p.id,
             title: p.title,
-            status: p.onePagerStatus,
-            type: p.onePagerType,
+            status: p.briefStatus,
+            type: p.briefType,
             recommendation: p.decisionRecommendation,
           })),
           opts.format,
@@ -102,7 +93,7 @@ export function registerBriefCommands(program: Command) {
     .option("--action <actionId>", "Generate from an action (AC-N or UUID)")
     .option("--insight <insightId>", "Generate from an insight (IN-N or UUID)")
     .option("--type <type>", "decision or prd")
-    .option("--retry <onePagerId>", "Retry a failed brief (OP-N or UUID)")
+    .option("--retry <briefId>", "Retry a failed brief (BR-N or UUID)")
     .action(async function (this: Command) {
       try {
         const opts = getGlobalOptions(this);
@@ -114,46 +105,46 @@ export function registerBriefCommands(program: Command) {
           );
         }
         const ctx = await resolveContext(opts.env, opts.token);
-        const type = o.type as OnePagerType | undefined;
+        const type = o.type as BriefType | undefined;
 
         let result: unknown;
         if (o.retry) {
           const found = await execute(
-            CliGetOnePagerDocument,
+            CliGetBriefDocument,
             { displayId: o.retry },
             ctx,
           );
-          if (!found.onePager?.id)
+          if (!found.brief?.id)
             throw new Error(`Decision brief "${o.retry}" not found.`);
           result = (
             await execute(
-              CliRetryOnePagerGenerationDocument,
-              { onePagerId: found.onePager.id },
+              CliRetryBriefGenerationDocument,
+              { briefId: found.brief.id },
               ctx,
             )
-          ).retryOnePagerGeneration;
+          ).retryBriefGeneration;
         } else if (o.action) {
           result = (
             await execute(
-              CliGenerateOnePagerFromActionDocument,
+              CliGenerateBriefFromActionDocument,
               { actionId: o.action, type },
               ctx,
             )
-          ).generateOnePagerFromAction;
+          ).generateBriefFromAction;
         } else {
           result = (
             await execute(
-              CliGenerateOnePagerFromInsightDocument,
+              CliGenerateBriefFromInsightDocument,
               { insightId: o.insight, type },
               ctx,
             )
-          ).generateOnePagerFromInsight;
+          ).generateBriefFromInsight;
         }
 
         outputJson({
           message: "Decision brief generation started",
           status: "building",
-          checkWith: "squad get <OP-N>",
+          checkWith: "squad get <BR-N>",
           brief: result,
         });
       } catch (error) {
@@ -164,29 +155,29 @@ export function registerBriefCommands(program: Command) {
   brief
     .command("status")
     .description("Move a decision brief through its review lifecycle")
-    .argument("<onePagerId>", "Decision brief display ID (OP-N) or UUID")
+    .argument("<briefId>", "Decision brief display ID (BR-N) or UUID")
     .argument("<status>", "draft | in_review | finalised")
-    .action(async function (this: Command, onePagerId: string, status: string) {
+    .action(async function (this: Command, briefId: string, status: string) {
       try {
         const opts = getGlobalOptions(this);
         const ctx = await resolveContext(opts.env, opts.token);
 
         const found = await execute(
-          CliGetOnePagerDocument,
-          { displayId: onePagerId },
+          CliGetBriefDocument,
+          { displayId: briefId },
           ctx,
         );
-        if (!found.onePager?.id)
-          throw new Error(`Decision brief "${onePagerId}" not found.`);
+        if (!found.brief?.id)
+          throw new Error(`Decision brief "${briefId}" not found.`);
 
         const data = await execute(
-          CliSetOnePagerStatusDocument,
-          { onePagerId: found.onePager.id, status: status as OnePagerStatus },
+          CliSetBriefStatusDocument,
+          { briefId: found.brief.id, status: status as BriefStatus },
           ctx,
         );
         outputJson({
           message: "Brief status updated",
-          brief: data.setOnePagerStatus,
+          brief: data.setBriefStatus,
         });
       } catch (error) {
         handleError(error);

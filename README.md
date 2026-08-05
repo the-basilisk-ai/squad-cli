@@ -48,14 +48,14 @@ squad workspace overview  # Orient: mission, goals, activity, open work
 | `squad goal list\|create\|update` | Strategic goals |
 | `squad research list\|create` | Research questions (knowledge gaps) |
 | `squad document list\|create\|update` | Knowledge documents |
-| `squad brief list\|generate\|status` | Decision briefs (one-pagers) |
+| `squad brief list\|generate\|status` | Decision briefs |
 | `squad integration list` | Connected feedback sources |
 | `squad activity` | Workspace change feed |
 | `squad search <query>` | Keyword search across the workspace |
 | `squad get <id>` | Fetch any entity by display ID (e.g. `AC-12`) or UUID |
 
 Entities are addressed by display ID: `SI` signal, `IN` insight, `AC` action,
-`GL` goal, `OP` decision brief, `DC` document, `RQ` research question, `CL`
+`GL` goal, `BR` decision brief, `DC` document, `RQ` research question, `CL`
 cluster. All commands support `--format json|table`.
 
 ## Configuration

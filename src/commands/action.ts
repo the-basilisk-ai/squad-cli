@@ -1,4 +1,4 @@
-import type { Command } from "commander";
+import { type Command, Option } from "commander";
 import { getGlobalOptions } from "../cli.js";
 import type { ActionStatus } from "../gql/graphql.js";
 import {
@@ -6,8 +6,8 @@ import {
   CliAssignActionDocument,
   CliDismissActionDocument,
   CliGetActionDocument,
+  CliGetBriefDocument,
   CliGetInsightDocument,
-  CliGetOnePagerDocument,
   CliLinkActionDocument,
   CliListActionsDocument,
   CliListActionsForInsightDocument,
@@ -273,14 +273,13 @@ export function registerActionCommands(program: Command) {
     .option("--notes <notes>", "Replace the notes field")
     .option("--assignee <who>", 'User ID, "me", or "none" to unassign')
     .option("--link-insight <insightId>", "Link to an insight (IN-N or UUID)")
-    .option(
-      "--link-one-pager <onePagerId>",
-      "Link to a decision brief (OP-N or UUID)",
-    )
+    .option("--link-brief <briefId>", "Link to a decision brief (BR-N or UUID)")
+    .addOption(new Option("--link-one-pager <onePagerId>").hideHelp())
     .action(async function (this: Command, actionId: string) {
       try {
         const opts = getGlobalOptions(this);
         const o = this.opts();
+        const briefId = o.linkBrief ?? o.linkOnePager;
         const fields = [
           o.priority,
           o.effort,
@@ -288,7 +287,7 @@ export function registerActionCommands(program: Command) {
           o.notes,
           o.assignee,
           o.linkInsight,
-          o.linkOnePager,
+          briefId,
         ];
         if (fields.every(f => f === undefined)) {
           throw new Error("Provide at least one field to update.");
@@ -341,12 +340,8 @@ export function registerActionCommands(program: Command) {
           );
           changes.push(assigneeUserId ? "assigned" : "unassigned");
         }
-        if (o.linkInsight || o.linkOnePager) {
-          const target = await resolveLinkTarget(
-            o.linkInsight,
-            o.linkOnePager,
-            ctx,
-          );
+        if (o.linkInsight || briefId) {
+          const target = await resolveLinkTarget(o.linkInsight, briefId, ctx);
           await execute(CliLinkActionDocument, { actionId: a.id, target }, ctx);
           changes.push("linked");
         }
@@ -364,9 +359,9 @@ export function registerActionCommands(program: Command) {
 
 async function resolveLinkTarget(
   insightId: string | undefined,
-  onePagerId: string | undefined,
+  briefId: string | undefined,
   ctx: ApiContext,
-): Promise<{ insightId?: string; onePagerId?: string }> {
+): Promise<{ insightId?: string; briefId?: string }> {
   if (insightId) {
     const data = await execute(
       CliGetInsightDocument,
@@ -376,15 +371,15 @@ async function resolveLinkTarget(
     if (!data.insight?.id) throw new Error(`Insight "${insightId}" not found.`);
     return { insightId: data.insight.id };
   }
-  if (onePagerId) {
+  if (briefId) {
     const data = await execute(
-      CliGetOnePagerDocument,
-      { displayId: onePagerId },
+      CliGetBriefDocument,
+      { displayId: briefId },
       ctx,
     );
-    if (!data.onePager?.id)
-      throw new Error(`Decision brief "${onePagerId}" not found.`);
-    return { onePagerId: data.onePager.id };
+    if (!data.brief?.id)
+      throw new Error(`Decision brief "${briefId}" not found.`);
+    return { briefId: data.brief.id };
   }
   return {};
 }
