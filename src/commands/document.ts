@@ -10,7 +10,7 @@ import {
   CliUpdateDocumentDocument,
 } from "../gql/graphql.js";
 import { resolveContext } from "../lib/context.js";
-import { formatDisplayId } from "../lib/display-id.js";
+import { formatDisplayId, isBriefKind } from "../lib/display-id.js";
 import { handleError } from "../lib/errors.js";
 import { execute } from "../lib/graphql/execute.js";
 import {
@@ -23,10 +23,7 @@ import {
 
 const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
 const docDisplayId = (kind?: string | null, displayId?: number | null) =>
-  formatDisplayId(
-    kind === "brief" || kind === "one_pager" ? "brief" : "document",
-    displayId,
-  );
+  formatDisplayId(isBriefKind(kind) ? "brief" : "document", displayId);
 
 export function registerDocumentCommands(program: Command) {
   const document = program
@@ -57,8 +54,7 @@ export function registerDocumentCommands(program: Command) {
           docs.map(d => ({
             displayId: docDisplayId(d.kind, d.displayId) ?? d.id,
             title: d.title,
-            kind:
-              d.kind === "brief" || d.kind === "one_pager" ? "brief" : d.kind,
+            kind: isBriefKind(d.kind) ? "brief" : d.kind,
             path: d.path,
             tags: (d.tags ?? []).join(","),
           })),

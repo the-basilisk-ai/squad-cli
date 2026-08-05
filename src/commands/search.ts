@@ -5,6 +5,7 @@ import {
   CliDocumentTextSearchDocument,
 } from "../gql/graphql.js";
 import { resolveContext } from "../lib/context.js";
+import { isBriefKind } from "../lib/display-id.js";
 import { handleError } from "../lib/errors.js";
 import { execute } from "../lib/graphql/execute.js";
 import { clampLimit, output } from "../lib/output.js";
@@ -77,10 +78,7 @@ export function registerSearchCommands(program: Command) {
           results.push({
             displayId: d.displayId ?? d.id,
             title: d.title,
-            type:
-              d.kind === "brief" || d.kind === "one_pager"
-                ? "brief"
-                : "document",
+            type: isBriefKind(d.kind) ? "brief" : "document",
           });
         }
 
