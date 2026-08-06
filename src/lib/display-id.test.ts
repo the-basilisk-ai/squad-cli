@@ -16,15 +16,6 @@ describe("parseEntityRef", () => {
     expect(ref).toMatchObject({ type: "insight", formatted: "IN-4" });
   });
 
-  it("accepts legacy one-pager IDs and canonicalizes them as briefs", () => {
-    expect(parseEntityRef("OP-3")).toEqual({
-      kind: "display",
-      type: "brief",
-      displayId: 3,
-      formatted: "BR-3",
-    });
-  });
-
   it("recognises a UUID", () => {
     const uuid = "3f2504e0-4f89-41d3-9a0c-0305e82c3301";
     expect(parseEntityRef(uuid)).toEqual({ kind: "uuid", id: uuid });

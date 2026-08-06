@@ -20,7 +20,6 @@ const PREFIX_TO_TYPE: Record<string, EntityType> = {
   AC: "action",
   GL: "goal",
   BR: "brief",
-  OP: "brief",
   DC: "document",
   RQ: "research_question",
   CL: "cluster",
