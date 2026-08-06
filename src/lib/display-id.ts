@@ -80,10 +80,6 @@ export function formatDisplayId(
   return `${prefix}-${displayId}`;
 }
 
-/**
- * A document's `kind` is a brief. The platform still emits the legacy
- * `one_pager` value during the briefs rename cutover, so treat both as briefs.
- */
 export function isBriefKind(kind: string | null | undefined): boolean {
-  return kind === "brief" || kind === "one_pager";
+  return kind === "brief";
 }

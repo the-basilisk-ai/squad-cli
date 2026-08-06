@@ -1,4 +1,4 @@
-import { type Command, Option } from "commander";
+import type { Command } from "commander";
 import { getGlobalOptions } from "../cli.js";
 import type { ActionStatus } from "../gql/graphql.js";
 import {
@@ -274,12 +274,11 @@ export function registerActionCommands(program: Command) {
     .option("--assignee <who>", 'User ID, "me", or "none" to unassign')
     .option("--link-insight <insightId>", "Link to an insight (IN-N or UUID)")
     .option("--link-brief <briefId>", "Link to a decision brief (BR-N or UUID)")
-    .addOption(new Option("--link-one-pager <onePagerId>").hideHelp())
     .action(async function (this: Command, actionId: string) {
       try {
         const opts = getGlobalOptions(this);
         const o = this.opts();
-        const briefId = o.linkBrief ?? o.linkOnePager;
+        const briefId = o.linkBrief;
         const fields = [
           o.priority,
           o.effort,
