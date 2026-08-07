@@ -33,7 +33,7 @@ describe("parseEntityRef", () => {
 describe("formatDisplayId", () => {
   it("formats a known type + number", () => {
     expect(formatDisplayId("goal", 7)).toBe("GL-7");
-    expect(formatDisplayId("one_pager", 3)).toBe("OP-3");
+    expect(formatDisplayId("brief", 3)).toBe("BR-3");
   });
 
   it("returns undefined for null/undefined", () => {

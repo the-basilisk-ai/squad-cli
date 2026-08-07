@@ -155,8 +155,8 @@ query CliGetDocumentMeta($id: String!) {
     tags
     updatedAt
     directoryId
-    onePagerStatus
-    onePagerType
+    briefStatus
+    briefType
     sourceAction {
       id
       displayId
@@ -174,13 +174,13 @@ query CliGetDocumentMarkdown($documentId: String!) {
   documentMarkdownExport(documentId: $documentId)
 }
 
-query CliGetOnePager($displayId: String!) {
-  onePager(displayId: $displayId) {
+query CliGetBrief($displayId: String!) {
+  brief(displayId: $displayId) {
     id
     displayId
     title
-    onePagerStatus
-    onePagerType
+    briefStatus
+    briefType
     decisionRecommendation
     failureReason
     updatedAt
