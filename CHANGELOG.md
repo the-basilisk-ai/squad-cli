@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/the-basilisk-ai/squad-cli/compare/cli-v0.4.1...cli-v0.5.0) (2026-08-07)
+
+
+### Features
+
+* **briefs:** rename one-pagers to briefs ([#75](https://github.com/the-basilisk-ai/squad-cli/issues/75)) ([8bfe581](https://github.com/the-basilisk-ai/squad-cli/commit/8bfe5816b1f5e32214352361740559c16d0b4573))
+
 ## [0.4.1](https://github.com/the-basilisk-ai/squad-cli/compare/cli-v0.4.0...cli-v0.4.1) (2026-07-15)
 
 
