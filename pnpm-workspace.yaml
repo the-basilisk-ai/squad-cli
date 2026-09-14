@@ -4,7 +4,10 @@ overrides:
   knip>picomatch: 4.0.4
   tinyglobby>picomatch: 4.0.4
   esbuild: 0.28.1
-  js-yaml: ^4.3.1
+  js-yaml: ">=4.3.2 <5"
+  smol-toml: ">=1.7.1 <2"
+  browserslist: ">=4.28.7 <5"
+  baseline-browser-mapping: ">=2.11.0 <3"
   postcss: ^8.5.23
 
 # Wait 3 days before resolving a newly published version, so a compromised
