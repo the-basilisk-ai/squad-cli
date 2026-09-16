@@ -15,6 +15,9 @@
     "dist",
     "LICENSE"
   ],
+  "engines": {
+    "node": ">=24"
+  },
   "type": "module",
   "bin": {
     "squad": "./dist/cli.js"

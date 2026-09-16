@@ -14,7 +14,7 @@ detailed usage guides and examples.
 npm install -g @squadai/cli
 ```
 
-Requires Node.js 22+.
+Requires Node.js 24+.
 
 ## Platform compatibility
 
