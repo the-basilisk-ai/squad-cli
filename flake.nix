@@ -16,8 +16,6 @@
           buildInputs = with pkgs; [
             nodejs_24
             pnpm_10
-            nodePackages.typescript
-            nodePackages.typescript-language-server
             jdk
             gitleaks
           ];
