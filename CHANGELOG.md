@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.4](https://github.com/the-basilisk-ai/squad-cli/compare/cli-v0.5.3...cli-v0.5.4) (2026-10-13)
+
+
+### Bug Fixes
+
+* **deps:** remediate mature Dependabot security advisories ([#102](https://github.com/the-basilisk-ai/squad-cli/issues/102)) ([25b0672](https://github.com/the-basilisk-ai/squad-cli/commit/25b06727ea8ddb012088c81df042cbf57a094b4d))
+
 ## [0.5.3](https://github.com/the-basilisk-ai/squad-cli/compare/cli-v0.5.2...cli-v0.5.3) (2026-10-05)
 
 
