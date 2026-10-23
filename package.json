@@ -1,6 +1,6 @@
 {
   "name": "@squadai/cli",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "description": "Squad AI CLI - Product strategy management for AI agents and humans",
   "license": "MIT",
   "repository": {
