@@ -14,8 +14,6 @@ overrides:
   shell-quote: ">=1.11.0 <2"
   source-map-js: ">=1.2.2 <2"
   "@graphql-tools/executor-legacy-ws": ">=1.1.35 <2"
-  "@graphql-tools/wrap": ">=11.2.1 <12"
-  "@graphql-codegen/schema-ast": ">=6.1.1 <7"
 
 # Wait 7 days before resolving a newly published version, so a compromised
 # fresh release can't be pulled in before it's caught. Matches the Dependabot
