@@ -1,19 +1,16 @@
 # Pin transitive versions (migrated from Yarn `resolutions`). As of pnpm 10.32
 # the `pnpm` field in package.json is ignored, so overrides live here.
 overrides:
-  knip>picomatch: 4.0.4
-  tinyglobby>picomatch: 4.0.4
   esbuild: 0.28.1
   js-yaml: ">=4.3.2 <5"
   smol-toml: ">=1.9.0 <2"
   browserslist: ">=4.28.7 <5"
-  baseline-browser-mapping: ">=2.11.0 <3"
-  postcss: ^8.5.23
+  "postcss@<8.5.23": ">=8.5.23 <9"
   "@fastify/busboy": ">=3.2.1 <4"
   brace-expansion: ">=5.0.12 <6"
   shell-quote: ">=1.11.0 <2"
   source-map-js: ">=1.2.2 <2"
-  "@graphql-tools/executor-legacy-ws": ">=1.1.35 <2"
+  zod: ">=4.6.6 <5"
 
 # Wait 7 days before resolving a newly published version, so a compromised
 # fresh release can't be pulled in before it's caught. Matches the Dependabot
