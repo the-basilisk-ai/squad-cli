@@ -11,6 +11,7 @@ overrides:
   shell-quote: ">=1.11.0 <2"
   source-map-js: ">=1.2.2 <2"
   zod: ">=4.6.6 <5"
+  graphql-config>minimatch: ">=11.0.1 <12"
 
 # Wait 7 days before resolving a newly published version, so a compromised
 # fresh release can't be pulled in before it's caught. Matches the Dependabot
